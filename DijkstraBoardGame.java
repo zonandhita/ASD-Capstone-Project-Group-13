@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.Random;
 
 public class DijkstraBoardGame extends JFrame {
     private GameBoard gameBoard;
@@ -8,6 +9,15 @@ public class DijkstraBoardGame extends JFrame {
     private DijkstraAlgorithm dijkstra;
     private JTextArea resultArea;
     private JLabel statusLabel;
+    private JLabel diceLabel;
+    private JButton rollDiceButton;
+    private JButton playModeButton;
+    private JButton findPathButton;
+
+    private int currentPlayerPosition;
+    private int rollCount;
+    private boolean isPlayMode;
+    private Random random;
 
     private static final int BOARD_SIZE = 7;
     private static final int CELL_SIZE = 80;
@@ -17,15 +27,17 @@ public class DijkstraBoardGame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
-        // Create game board
+        // Initialize
         gameBoard = new GameBoard(BOARD_SIZE, CELL_SIZE);
         boardPanel = new BoardPanel(gameBoard);
         dijkstra = new DijkstraAlgorithm(gameBoard);
+        random = new Random();
+        currentPlayerPosition = 1;
+        rollCount = 0;
+        isPlayMode = false;
 
-        // Create control panel
+        // Create panels
         JPanel controlPanel = createControlPanel();
-
-        // Create info panel
         JPanel infoPanel = createInfoPanel();
 
         // Add components
@@ -36,32 +48,54 @@ public class DijkstraBoardGame extends JFrame {
         pack();
         setLocationRelativeTo(null);
         setResizable(false);
+
+        updatePlayerPosition();
     }
 
     private JPanel createControlPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         panel.setBackground(new Color(60, 60, 60));
 
-        JLabel titleLabel = new JLabel("🎲 SNAKE AND LADDER - DIJKSTRA PATHFINDING 🎲");
+        JLabel titleLabel = new JLabel("🎲 SNAKE AND LADDER 🎲");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         titleLabel.setForeground(Color.WHITE);
 
-        JButton findPathButton = new JButton("Find Shortest Path");
+        // Play Mode Button
+        playModeButton = new JButton("🎮 Play Game");
+        playModeButton.setFont(new Font("Arial", Font.BOLD, 14));
+        playModeButton.setBackground(new Color(52, 152, 219));
+        playModeButton.setForeground(Color.WHITE);
+        playModeButton.setFocusPainted(false);
+        playModeButton.addActionListener(e -> togglePlayMode());
+
+        // Roll Dice Button
+        rollDiceButton = new JButton("🎲 Roll Dice");
+        rollDiceButton.setFont(new Font("Arial", Font.BOLD, 14));
+        rollDiceButton.setBackground(new Color(241, 196, 15));
+        rollDiceButton.setForeground(Color.WHITE);
+        rollDiceButton.setFocusPainted(false);
+        rollDiceButton.setEnabled(false);
+        rollDiceButton.addActionListener(e -> rollDice());
+
+        // Find Path Button
+        findPathButton = new JButton("🔍 Find Shortest Path");
         findPathButton.setFont(new Font("Arial", Font.BOLD, 14));
         findPathButton.setBackground(new Color(46, 204, 113));
         findPathButton.setForeground(Color.WHITE);
         findPathButton.setFocusPainted(false);
         findPathButton.addActionListener(e -> findShortestPath());
 
-        JButton resetButton = new JButton("Reset");
+        JButton resetButton = new JButton("🔄 Reset");
         resetButton.setFont(new Font("Arial", Font.BOLD, 14));
         resetButton.setBackground(new Color(231, 76, 60));
         resetButton.setForeground(Color.WHITE);
         resetButton.setFocusPainted(false);
-        resetButton.addActionListener(e -> resetBoard());
+        resetButton.addActionListener(e -> resetGame());
 
         panel.add(titleLabel);
         panel.add(Box.createHorizontalStrut(20));
+        panel.add(playModeButton);
+        panel.add(rollDiceButton);
         panel.add(findPathButton);
         panel.add(resetButton);
 
@@ -75,7 +109,7 @@ public class DijkstraBoardGame extends JFrame {
         panel.setBackground(Color.WHITE);
 
         // Status label
-        statusLabel = new JLabel("Ready to find path!");
+        statusLabel = new JLabel("Select a mode to start!");
         statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
         statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
         statusLabel.setOpaque(true);
@@ -83,52 +117,65 @@ public class DijkstraBoardGame extends JFrame {
         statusLabel.setForeground(Color.WHITE);
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
 
+        // Dice display
+        diceLabel = new JLabel("🎲 Roll: -");
+        diceLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        diceLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        diceLabel.setOpaque(true);
+        diceLabel.setBackground(Color.WHITE);
+        diceLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        diceLabel.setPreferredSize(new Dimension(280, 50));
+
         // Legend panel
         JPanel legendPanel = new JPanel(new GridLayout(6, 1, 5, 5));
         legendPanel.setBorder(BorderFactory.createTitledBorder("Legend"));
 
-        legendPanel.add(createLegendItem(new Color(144, 238, 144), "Start (Cell 1)"));
+        legendPanel.add(createLegendItem(new Color(152, 251, 152), "Start (Cell 1)"));
         legendPanel.add(createLegendItem(new Color(255, 215, 0), "Finish (Cell 49)"));
-        legendPanel.add(createLegendItem(new Color(255, 200, 200), "Snake (↓)"));
-        legendPanel.add(createLegendItem(new Color(200, 255, 200), "Ladder (↑)"));
-        legendPanel.add(createLegendItem(new Color(200, 230, 255), "Visited"));
-        legendPanel.add(createLegendItem(new Color(255, 255, 150), "Shortest Path"));
+        legendPanel.add(createLegendItem(new Color(255, 182, 193), "Snake (↓)"));
+        legendPanel.add(createLegendItem(new Color(144, 238, 144), "Ladder (↑)"));
+        legendPanel.add(createLegendItem(new Color(173, 216, 230), "Visited"));
+        legendPanel.add(createLegendItem(new Color(255, 223, 0), "Shortest Path"));
 
         // Result area
         resultArea = new JTextArea(15, 20);
         resultArea.setEditable(false);
         resultArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        resultArea.setBorder(BorderFactory.createTitledBorder("Path Details"));
+        resultArea.setBorder(BorderFactory.createTitledBorder("Game Info"));
         JScrollPane scrollPane = new JScrollPane(resultArea);
 
         // Info text
         JTextArea infoText = new JTextArea(
-                "HOW IT WORKS:\n\n" +
-                        "1. Dijkstra finds the shortest\n" +
-                        "   path from Start to Finish\n\n" +
-                        "2. Dice roll: 1-6 steps\n\n" +
-                        "3. Snakes move you DOWN\n\n" +
-                        "4. Ladders move you UP\n\n" +
-                        "5. Yellow = optimal path\n\n" +
-                        "6. Blue = explored cells"
+                "🎮 PLAY MODE:\n" +
+                        "Click 'Play Game' to start\n" +
+                        "Roll dice to move (1-6)\n" +
+                        "Reach cell 49 to win!\n\n" +
+                        "🔍 PATHFINDING MODE:\n" +
+                        "Find optimal path using\n" +
+                        "Dijkstra's algorithm\n\n" +
+                        "🐍 Snakes: Move DOWN\n" +
+                        "🪜 Ladders: Move UP"
         );
         infoText.setEditable(false);
         infoText.setFont(new Font("Arial", Font.PLAIN, 11));
         infoText.setBackground(new Color(255, 255, 220));
         infoText.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        panel.add(statusLabel, BorderLayout.NORTH);
+        // Top panel with status and dice
+        JPanel topPanel = new JPanel(new BorderLayout(5, 5));
+        topPanel.add(statusLabel, BorderLayout.NORTH);
+        topPanel.add(diceLabel, BorderLayout.CENTER);
+
+        panel.add(topPanel, BorderLayout.NORTH);
         panel.add(legendPanel, BorderLayout.CENTER);
-        panel.add(scrollPane, BorderLayout.SOUTH);
 
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.add(infoText, BorderLayout.CENTER);
+        JPanel bottomPanel = new JPanel(new BorderLayout(5, 5));
+        bottomPanel.add(scrollPane, BorderLayout.CENTER);
+        bottomPanel.add(infoText, BorderLayout.SOUTH);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
-        mainPanel.add(panel, BorderLayout.CENTER);
-        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+        panel.add(bottomPanel, BorderLayout.SOUTH);
 
-        return mainPanel;
+        return panel;
     }
 
     private JPanel createLegendItem(Color color, String text) {
@@ -147,6 +194,97 @@ public class DijkstraBoardGame extends JFrame {
         panel.add(label);
 
         return panel;
+    }
+
+    private void togglePlayMode() {
+        isPlayMode = !isPlayMode;
+
+        if (isPlayMode) {
+            // Start play mode
+            resetGame();
+            playModeButton.setText("🔍 Path Mode");
+            playModeButton.setBackground(new Color(155, 89, 182));
+            rollDiceButton.setEnabled(true);
+            findPathButton.setEnabled(false);
+            statusLabel.setText("🎮 PLAY MODE - Roll the dice!");
+            statusLabel.setBackground(new Color(52, 152, 219));
+
+            resultArea.setText("🎮 GAME STARTED!\n" +
+                    "=================\n\n" +
+                    "Current Position: 1\n" +
+                    "Rolls: 0\n\n" +
+                    "Roll the dice to move!\n" +
+                    "First to reach 49 wins!");
+        } else {
+            // Switch to pathfinding mode
+            playModeButton.setText("🎮 Play Game");
+            playModeButton.setBackground(new Color(52, 152, 219));
+            rollDiceButton.setEnabled(false);
+            findPathButton.setEnabled(true);
+            statusLabel.setText("Ready to find path!");
+            statusLabel.setBackground(new Color(46, 204, 113));
+            resetGame();
+        }
+    }
+
+    private void rollDice() {
+        if (currentPlayerPosition >= BOARD_SIZE * BOARD_SIZE) {
+            return;
+        }
+
+        // Roll dice
+        int diceValue = random.nextInt(6) + 1;
+        rollCount++;
+        diceLabel.setText("🎲 Roll: " + diceValue);
+
+        // Move player
+        int oldPosition = currentPlayerPosition;
+        int newPosition = currentPlayerPosition + diceValue;
+
+        // Check if exceeds board
+        if (newPosition > BOARD_SIZE * BOARD_SIZE) {
+            resultArea.append("\n❌ Roll too high! Stay at " + currentPlayerPosition);
+            return;
+        }
+
+        currentPlayerPosition = newPosition;
+
+        // Check for snake or ladder
+        Cell currentCell = gameBoard.getCellByNumber(currentPlayerPosition);
+        String moveInfo = "Roll #" + rollCount + ": " + diceValue + "\n";
+        moveInfo += oldPosition + " → " + currentPlayerPosition;
+
+        if (currentCell != null && currentCell.getTargetCell() != -1) {
+            if (currentCell.getType() == Cell.CellType.SNAKE) {
+                moveInfo += " 🐍 Snake! → " + currentCell.getTargetCell();
+                currentPlayerPosition = currentCell.getTargetCell();
+            } else if (currentCell.getType() == Cell.CellType.LADDER) {
+                moveInfo += " 🪜 Ladder! → " + currentCell.getTargetCell();
+                currentPlayerPosition = currentCell.getTargetCell();
+            }
+        }
+
+        resultArea.append("\n" + moveInfo);
+
+        // Check win condition
+        if (currentPlayerPosition >= BOARD_SIZE * BOARD_SIZE) {
+            statusLabel.setText("🎉 YOU WIN!");
+            statusLabel.setBackground(new Color(46, 204, 113));
+            rollDiceButton.setEnabled(false);
+            resultArea.append("\n\n🎉🎉🎉 WINNER! 🎉🎉🎉");
+            resultArea.append("\nTotal Rolls: " + rollCount);
+        }
+
+        updatePlayerPosition();
+    }
+
+    private void updatePlayerPosition() {
+        gameBoard.resetVisualization();
+        Cell playerCell = gameBoard.getCellByNumber(currentPlayerPosition);
+        if (playerCell != null) {
+            playerCell.setPath(true);
+        }
+        boardPanel.updateBoard();
     }
 
     private void findShortestPath() {
@@ -203,12 +341,27 @@ public class DijkstraBoardGame extends JFrame {
         boardPanel.updateBoard();
     }
 
-    private void resetBoard() {
+    private void resetGame() {
+        currentPlayerPosition = 1;
+        rollCount = 0;
+        diceLabel.setText("🎲 Roll: -");
         gameBoard.resetVisualization();
-        boardPanel.updateBoard();
-        resultArea.setText("");
-        statusLabel.setText("Ready to find path!");
-        statusLabel.setBackground(new Color(52, 152, 219));
+        updatePlayerPosition();
+
+        if (isPlayMode) {
+            resultArea.setText("🎮 GAME RESET!\n" +
+                    "=================\n\n" +
+                    "Current Position: 1\n" +
+                    "Rolls: 0\n\n" +
+                    "Roll the dice to start!");
+            rollDiceButton.setEnabled(true);
+            statusLabel.setText("🎮 PLAY MODE - Roll the dice!");
+            statusLabel.setBackground(new Color(52, 152, 219));
+        } else {
+            resultArea.setText("");
+            statusLabel.setText("Ready to find path!");
+            statusLabel.setBackground(new Color(52, 152, 219));
+        }
     }
 
     public static void main(String[] args) {
