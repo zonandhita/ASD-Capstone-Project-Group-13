@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ca8d4a0d-160a-44a8-88d9-5f3661dba3a4" name="Changes" comment="Add DijkstraBoardGame" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;zonandhita&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/zonandhita/ASD-Capstone-Project-Group-13&quot;,
+    &quot;accountId&quot;: &quot;58daf45e-cdd0-457c-87df-9bd464862ecd&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="35aU34yLUd12w2sNqn2JMHvFYVf" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.DijkstraBoardGame.executor": "Run",
+    "Application.GraphVisualizer.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "settings.editor.selected.configurable": "project.propVCSSupport.Mappings"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ca8d4a0d-160a-44a8-88d9-5f3661dba3a4" name="Changes" comment="" />
+      <created>1763347473924</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1763347473924</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Node Class, Edge Class, Graph Class, GraphPanel Class, GraphVisualizer Class">
+      <option name="closed" value="true" />
+      <created>1763349413821</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1763349413821</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Node Class, Edge Class, Graph Class, GraphPanel Class, GraphVisualizer Class">
+      <option name="closed" value="true" />
+      <created>1764205440759</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1764205440759</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Djikstra, BoardPanel, GameBoard, Cell, dll">
+      <option name="closed" value="true" />
+      <created>1764205683597</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1764205683597</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Add Cell class for game board cells">
+      <option name="closed" value="true" />
+      <created>1764206403402</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1764206403402</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Add GameBoard class">
+      <option name="closed" value="true" />
+      <created>1764206440469</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1764206440469</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Add Dijkstra algorithm implementation">
+      <option name="closed" value="true" />
+      <created>1764206464807</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1764206464807</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Add Board Panel">
+      <option name="closed" value="true" />
+      <created>1764206525305</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1764206525305</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Add DijkstraBoardGame">
+      <option name="closed" value="true" />
+      <created>1764206559632</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1764206559632</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Node Class, Edge Class, Graph Class, GraphPanel Class, GraphVisualizer Class" />
+    <MESSAGE value="Djikstra, BoardPanel, GameBoard, Cell, dll" />
+    <MESSAGE value="Add Cell class for game board cells" />
+    <MESSAGE value="Add GameBoard class" />
+    <MESSAGE value="Add Dijkstra algorithm implementation" />
+    <MESSAGE value="Add Board Panel" />
+    <MESSAGE value="Add DijkstraBoardGame" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add DijkstraBoardGame" />
+  </component>
+</project>
