@@ -1,5 +1,8 @@
-// Graph class managing nodes and edges
-class Graph {
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Graph {
     private List<Node> nodes;
     private List<Edge> edges;
     private int[][] adjacencyMatrix;
@@ -48,6 +51,11 @@ class Graph {
         }
     }
 
-    public List<Node> getNodes() { return nodes; }
-    public List<Edge> getEdges() { return edges; }
+    public List<Node> getNodes() {
+        return nodes;
+    }
+
+    public List<Edge> getEdges() {
+        return edges;
+    }
 }

@@ -1,11 +1,6 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.*;
-import java.util.ArrayList;
-import java.util.List;
 
-// Node class representing a vertex in the graph
-class Node {
+public class Node {
     private int id;
     private double x, y;
     private static final int RADIUS = 25;
@@ -16,10 +11,26 @@ class Node {
         this.y = y;
     }
 
-    public int getId() { return id; }
-    public double getX() { return x; }
-    public double getY() { return y; }
-    public int getRadius() { return RADIUS; }
+    public int getId() {
+        return id;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public int getRadius() {
+        return RADIUS;
+    }
+
+    public void setPosition(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
 
     public void draw(Graphics2D g2) {
         // Draw node circle

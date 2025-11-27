@@ -1,4 +1,6 @@
-// Main application class
+import javax.swing.*;
+import java.awt.*;
+
 public class GraphVisualizer extends JFrame {
     private GraphPanel graphPanel;
     private JTextArea matrixInput;

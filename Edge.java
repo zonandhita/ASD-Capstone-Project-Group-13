@@ -1,5 +1,7 @@
-// Edge class representing a connection between nodes
-class Edge {
+import java.awt.*;
+import java.awt.geom.Line2D;
+
+public class Edge {
     private Node source;
     private Node target;
     private int weight;
@@ -10,9 +12,17 @@ class Edge {
         this.weight = weight;
     }
 
-    public Node getSource() { return source; }
-    public Node getTarget() { return target; }
-    public int getWeight() { return weight; }
+    public Node getSource() {
+        return source;
+    }
+
+    public Node getTarget() {
+        return target;
+    }
+
+    public int getWeight() {
+        return weight;
+    }
 
     public void draw(Graphics2D g2) {
         // Calculate arrow points
