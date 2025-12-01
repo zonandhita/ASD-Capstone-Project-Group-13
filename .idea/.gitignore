@@ -1,20 +1,3 @@
-# IntelliJ IDEA
-.idea/
-*.iml
-*.iws
-*.ipr
-out/
-target/
-
-# Compiled files
-*.class
-*.jar
-*.war
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Build folders
-build/
-dist/
+# Default ignored files
+/shelf/
+/workspace.xml
