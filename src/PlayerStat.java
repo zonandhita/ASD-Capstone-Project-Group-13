@@ -1,7 +1,7 @@
 public class PlayerStat implements Comparable<PlayerStat> {
     private String name;
-    private int score;
-    private int totalSteps;
+    private int score;      // Earnings
+    private int totalSteps; // Fuel
 
     public PlayerStat(String name, int score, int totalSteps) {
         this.name = name;
@@ -9,20 +9,20 @@ public class PlayerStat implements Comparable<PlayerStat> {
         this.totalSteps = totalSteps;
     }
 
-    // Override compareTo untuk sorting otomatis di PriorityQueue
+    // Sorting Logic:
+    // 1. Uang terbanyak menang
+    // 2. Jika uang sama, Bensin (langkah) teredikit menang
     @Override
     public int compareTo(PlayerStat other) {
-        // 1. Prioritas Utama: SKOR TERBESAR (Descending)
         if (this.score != other.score) {
-            return other.score - this.score;
+            return other.score - this.score; // Descending (High Score first)
         }
-        // 2. Prioritas Kedua: LANGKAH TERDIKIT (Ascending)
-        // Jika skor sama, yang langkahnya lebih sedikit yang menang
-        return this.totalSteps - other.totalSteps;
+        return this.totalSteps - other.totalSteps; // Ascending (Low Steps first)
     }
 
+    // ✅ UPDATE: Format Text agar sesuai tema Kurir
     @Override
     public String toString() {
-        return String.format("%-10s | Score: %-5d | Steps: %d", name, score, totalSteps);
+        return String.format("%-12s | Earnings: $% -4d | Fuel Used: %d L", name, score, totalSteps);
     }
 }
