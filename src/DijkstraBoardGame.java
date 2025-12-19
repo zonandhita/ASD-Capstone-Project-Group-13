@@ -23,13 +23,14 @@ public class DijkstraBoardGame extends JFrame {
     private PriorityQueue<PlayerStat> leaderboard = new PriorityQueue<>();
 
     private static final int BOARD_SIZE = 7;
-    private static final int CELL_SIZE = 80;
+    private static final int CELL_SIZE = 75;
+    // Total Tinggi Board = 525px
 
     private JTextArea resultArea;
     private JLabel[] playerStatusLabels = new JLabel[2];
     private JLabel[] playerDiceLabels = new JLabel[2];
     private JPanel[] playerPanels = new JPanel[2];
-    private JButton rollDiceButton, playModeButton, resetButton;
+    private JButton rollDiceButton, playModeButton, resetButton, resetMapButton;
     private JCheckBox safeModeCheck;
 
     private boolean isGameStarted = false;
@@ -39,53 +40,58 @@ public class DijkstraBoardGame extends JFrame {
     public DijkstraBoardGame() {
         setTitle("Code City Courier - Final Project Group 13");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setResizable(false);
 
-        // Inisialisasi Layar Utama
+        // Hapus semua gap pada BorderLayout utama
+        setLayout(new BorderLayout(0, 0));
+
         mainContainer.add(createLoginPanel(), "LOGIN");
-        add(mainContainer);
+        add(mainContainer, BorderLayout.CENTER);
 
         cardLayout.show(mainContainer, "LOGIN");
 
         pack();
+        setResizable(false);
         setLocationRelativeTo(null);
     }
 
-    /**
-     * HOMEPAGE: Menampilkan Ketentuan Bermain dan Login
-     */
     private JPanel createLoginPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setPreferredSize(new Dimension(1000, 700));
+        panel.setPreferredSize(new Dimension(850, 600));
         panel.setBackground(new Color(44, 62, 80));
 
-        JLabel title = new JLabel("CITY COURIER: DASHBOARD DISPATCH", SwingConstants.CENTER);
+        JLabel title = new JLabel("CITY COURIER: DISPATCH CENTER", SwingConstants.CENTER);
         title.setFont(new Font("Segoe UI", Font.BOLD, 36));
         title.setForeground(Color.WHITE);
-        title.setBorder(BorderFactory.createEmptyBorder(40, 0, 20, 0));
+        title.setBorder(BorderFactory.createEmptyBorder(50, 0, 30, 0));
         panel.add(title, BorderLayout.NORTH);
 
-        JPanel content = new JPanel(new GridLayout(1, 2, 30, 0));
-        content.setOpaque(false);
-        content.setBorder(BorderFactory.createEmptyBorder(20, 50, 50, 50));
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setOpaque(false);
 
-        // Form Login
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(new Color(236, 240, 241));
-        form.setBorder(BorderFactory.createTitledBorder(null, " COURIER REGISTRATION ", 0, 0, new Font("Segoe UI", Font.BOLD, 16), Color.BLACK));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        form.setPreferredSize(new Dimension(450, 320));
+        form.setBorder(BorderFactory.createTitledBorder(null, " COURIER REGISTRATION ", 0, 0, new Font("Segoe UI", Font.BOLD, 14), Color.BLACK));
 
         JTextField p1Field = new JTextField(p1NameInput, 15);
         JTextField p2Field = new JTextField(p2NameInput, 15);
 
-        gbc.gridx = 0; gbc.gridy = 0; form.add(new JLabel("Courier 1 Name (RED):"), gbc);
-        gbc.gridy = 1; form.add(p1Field, gbc);
-        gbc.gridy = 2; form.add(new JLabel("Courier 2 Name (BLUE):"), gbc);
-        gbc.gridy = 3; form.add(p2Field, gbc);
+        GridBagConstraints fGbc = new GridBagConstraints();
+        fGbc.insets = new Insets(5, 10, 5, 10);
+        fGbc.fill = GridBagConstraints.HORIZONTAL;
+        fGbc.gridx = 0; fGbc.gridy = 0; form.add(new JLabel("Courier 1 (RED):"), fGbc);
+        fGbc.gridy = 1; form.add(p1Field, fGbc);
+        fGbc.gridy = 2; form.add(new JLabel("Courier 2 (BLUE):"), fGbc);
+        fGbc.gridy = 3; form.add(p2Field, fGbc);
 
-        JButton startBtn = new JButton("CONFIRM & INITIALIZE");
+        JButton rulesBtn = new JButton(" LIHAT KETENTUAN BERMAIN");
+        rulesBtn.setBackground(new Color(52, 152, 219));
+        rulesBtn.setForeground(Color.WHITE);
+        rulesBtn.addActionListener(e -> showRulesPopup());
+        fGbc.gridy = 4; fGbc.insets = new Insets(20, 10, 5, 10);
+        form.add(rulesBtn, fGbc);
+
+        JButton startBtn = new JButton("START SHIFT");
         startBtn.setBackground(new Color(46, 204, 113));
         startBtn.setForeground(Color.WHITE);
         startBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -94,36 +100,39 @@ public class DijkstraBoardGame extends JFrame {
             p2NameInput = p2Field.getText().trim();
             setupGame();
             cardLayout.show(mainContainer, "GAME");
+            // Paksa JFrame menyesuaikan ukuran board game secara presisi
+            pack();
+            setLocationRelativeTo(null);
         });
-        gbc.gridy = 4; gbc.insets = new Insets(30, 10, 10, 10);
-        form.add(startBtn, gbc);
+        fGbc.gridy = 5; fGbc.insets = new Insets(10, 10, 10, 10);
+        form.add(startBtn, fGbc);
 
-        // KETENTUAN BERMAIN
-        JTextArea rules = new JTextArea();
-        rules.setEditable(false);
-        rules.setBackground(new Color(52, 73, 94));
-        rules.setForeground(Color.WHITE);
-        rules.setFont(new Font("Consolas", Font.PLAIN, 13));
-        rules.setText("--- KETENTUAN BERMAIN: CITY COURIER ---\n\n" +
+        centerPanel.add(form);
+        panel.add(centerPanel, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void showRulesPopup() {
+        String rulesText = "--- KETENTUAN BERMAIN: CITY COURIER ---\n\n" +
                 "1. MESIN & GERAK\n" +
-                " - GAS: Maju (Peluang 80%).\n" +
-                " - STALL: Mundur (Peluang 20%).\n" +
-                " - BINTANG: Bonus 1x jalan (Kelipatan 5).\n\n" +
+                " - GAS: Maju (80%).\n" +
+                " - STALL: Mundur (20%).\n" +
+                " - BINTANG: Bonus 1x jalan.\n\n" +
                 "2. FITUR JALUR\n" +
-                " - HIGHWAY: Lompat ke petak atas.\n" +
-                " - TRAFFIC: Turun ke petak bawah.\n" +
-                " - RAID: Razia! Balik ke Start (Petak 1).\n\n" +
-                "3. TEKNOLOGI GPS (Petak Prima)\n" +
-                " - GPS ACTIVE: Cari rute tercepat.\n" +
+                " - HIGHWAY: Lompat ke atas.\n" +
+                " - TRAFFIC: Turun ke bawah.\n" +
+                " - RAID: Razia! Balik ke Start.\n\n" +
+                "3. GPS DIJKSTRA\n" +
                 " - PREMIUM: Hindari Polisi & Macet.\n\n" +
                 "4. GOAL\n" +
-                " - Capai Petak 49 dengan Earnings terbanyak!");
-        rules.setMargin(new Insets(20, 20, 20, 20));
+                " - Capai Petak 49 dengan Earnings terbanyak!";
 
-        content.add(form);
-        content.add(rules);
-        panel.add(content, BorderLayout.CENTER);
-        return panel;
+        JTextArea textArea = new JTextArea(rulesText);
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Consolas", Font.PLAIN, 13));
+        textArea.setMargin(new Insets(10, 10, 10, 10));
+
+        JOptionPane.showMessageDialog(this, new JScrollPane(textArea), "PROTOKOL SHIFT", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void setupGame() {
@@ -136,14 +145,29 @@ public class DijkstraBoardGame extends JFrame {
         players.add(new Player(p1NameInput.isEmpty() ? "Courier 1" : p1NameInput, Color.RED));
         players.add(new Player(p2NameInput.isEmpty() ? "Courier 2" : p2NameInput, Color.BLUE));
 
-        JPanel gamePanel = new JPanel(new BorderLayout(15, 15));
+        // Hilangkan gap pada gamePanel
+        JPanel gamePanel = new JPanel(new BorderLayout(0, 0));
         boardPanel = new BoardPanel(gameBoard, players);
+
         gamePanel.add(boardPanel, BorderLayout.CENTER);
         gamePanel.add(createControlPanel(), BorderLayout.NORTH);
         gamePanel.add(createDualDashboardPanel(), BorderLayout.EAST);
 
         mainContainer.add(gamePanel, "GAME");
         updateTurnDisplay();
+    }
+
+    private void resetMap() {
+        if (movementTimer != null && movementTimer.isRunning()) movementTimer.stop();
+        gameBoard.generateFeatures(5, 4);
+        gameBoard.generateScores(10);
+        for (Player p : players) p.setPosition(1);
+        isGameStarted = false;
+        rollDiceButton.setEnabled(false);
+        playModeButton.setEnabled(true);
+        resultArea.setText("");
+        log("SYSTEM: Map reset! Courier back to HQ.");
+        boardPanel.repaint();
     }
 
     private void startGame() {
@@ -153,7 +177,7 @@ public class DijkstraBoardGame extends JFrame {
         for(Player p : players) p.reset();
         boardPanel.repaint();
         updateTurnDisplay();
-        log("SYSTEM: Dispatch shift started! Delivering...");
+        log("SYSTEM: Dispatch shift started!");
     }
 
     private void rollDice() {
@@ -163,20 +187,18 @@ public class DijkstraBoardGame extends JFrame {
         activeDiceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 45));
         String[] diceFaces = {"⚀", "⚁", "⚂", "⚃", "⚄", "⚅"};
 
-        Timer rollingAnimation = new Timer(80, new ActionListener() {
-            int ticks = 0;
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                activeDiceLabel.setText(diceFaces[random.nextInt(6)]);
-                activeDiceLabel.setForeground(new Color(random.nextInt(150), random.nextInt(150), random.nextInt(150)));
-                ticks++;
-                if (ticks > 12) {
-                    ((Timer)e.getSource()).stop();
-                    finalizeRoll();
-                }
-            }
+        Timer rollingAnimation = new Timer(80, e -> {
+            activeDiceLabel.setText(diceFaces[random.nextInt(6)]);
+            activeDiceLabel.setForeground(new Color(random.nextInt(150), random.nextInt(150), random.nextInt(150)));
         });
+
+        Timer stopper = new Timer(1000, e -> {
+            rollingAnimation.stop();
+            finalizeRoll();
+        });
+        stopper.setRepeats(false);
         rollingAnimation.start();
+        stopper.start();
     }
 
     private void finalizeRoll() {
@@ -186,7 +208,7 @@ public class DijkstraBoardGame extends JFrame {
         boolean isGreen = random.nextInt(100) < 80;
 
         JLabel activeDiceLabel = playerDiceLabels[currentPlayerIndex];
-        activeDiceLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        activeDiceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 28));
         activeDiceLabel.setText(dice + (isGreen ? " GAS" : " STALL"));
         activeDiceLabel.setForeground(isGreen ? new Color(34, 139, 34) : Color.RED);
 
@@ -203,12 +225,12 @@ public class DijkstraBoardGame extends JFrame {
                 dijkstra.setSafeMode(safeModeCheck.isSelected());
                 List<Integer> path = dijkstra.findShortestPath(currentPos, BOARD_SIZE * BOARD_SIZE);
                 int target = path.get(Math.min(dice, path.size() - 1));
-                logMsg.append("Smart Path to ").append(target);
+                logMsg.append("Path to ").append(target);
                 animateMovement(p, target, true, logMsg);
             } else {
                 int target = currentPos + dice;
                 if (target > BOARD_SIZE * BOARD_SIZE) {
-                    logMsg.append(" | OVERSHOOT: Waiting...");
+                    logMsg.append(" | OVERSHOOT!");
                     log(logMsg.toString());
                     nextTurn();
                 } else animateMovement(p, target, false, logMsg);
@@ -242,15 +264,13 @@ public class DijkstraBoardGame extends JFrame {
         if (cell != null) {
             if (cell.isTrap()) {
                 soundManager.playSFX("resources/trap.wav");
-                logMsg.append(" | RAID! Balik ke HQ");
+                logMsg.append(" | RAID! Back to HQ");
                 p.setPosition(1);
             } else if (cell.getType() == Cell.CellType.SNAKE) {
                 soundManager.playSFX("resources/snake.wav");
-                logMsg.append(" | TRAFFIC! Detour ke ").append(cell.getTargetCell());
                 p.setPosition(cell.getTargetCell());
             } else if (cell.getType() == Cell.CellType.LADDER) {
                 soundManager.playSFX("resources/ladder.wav");
-                logMsg.append(" | HIGHWAY! Fast to ").append(cell.getTargetCell());
                 p.setPosition(cell.getTargetCell());
             }
         }
@@ -263,7 +283,7 @@ public class DijkstraBoardGame extends JFrame {
             showLeaderboard();
             resetGame();
         } else if (p.getPosition() % 5 == 0 && p.getPosition() != 1) {
-            log("INFO: Gas Station (Bintang) - Bonus 1x Jalan untuk " + p.getName());
+            log("INFO: Gas Station - Bonus for " + p.getName());
             rollDiceButton.setEnabled(true);
             updateTurnDisplay();
         } else nextTurn();
@@ -286,15 +306,15 @@ public class DijkstraBoardGame extends JFrame {
     private void updateTurnDisplay() {
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
-            playerStatusLabels[i].setText(p.getName().toUpperCase() + " | Earnings: $" + p.getScore());
+            playerStatusLabels[i].setText(p.getName().toUpperCase() + " | $" + p.getScore());
             if (i == currentPlayerIndex) {
                 playerPanels[i].setBorder(BorderFactory.createLineBorder(p.getColor(), 4));
                 playerPanels[i].setBackground(Color.WHITE);
-                playerDiceLabels[i].setText("STATUS: DRIVE");
+                playerDiceLabels[i].setText("DRIVE");
             } else {
                 playerPanels[i].setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
                 playerPanels[i].setBackground(new Color(245, 245, 245));
-                playerDiceLabels[i].setText("STATUS: STANDBY");
+                playerDiceLabels[i].setText("STANDBY");
             }
         }
     }
@@ -319,13 +339,16 @@ public class DijkstraBoardGame extends JFrame {
     }
 
     private JPanel createDualDashboardPanel() {
-        JPanel container = new JPanel(new BorderLayout(10, 10));
-        container.setPreferredSize(new Dimension(320, 0));
-        container.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel container = new JPanel(new BorderLayout(0, 0));
+        int totalBoardHeight = BOARD_SIZE * CELL_SIZE;
+        // Dashboard dipaksa setinggi papan permainan
+        container.setPreferredSize(new Dimension(320, totalBoardHeight));
         container.setBackground(new Color(235, 235, 240));
 
-        JPanel dashArea = new JPanel(new GridLayout(2, 1, 10, 10));
+        JPanel dashArea = new JPanel(new GridLayout(2, 1, 5, 5));
         dashArea.setOpaque(false);
+        dashArea.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
         for (int i = 0; i < 2; i++) {
             playerPanels[i] = new JPanel(new BorderLayout());
             playerPanels[i].setBackground(Color.WHITE);
@@ -333,7 +356,7 @@ public class DijkstraBoardGame extends JFrame {
             playerStatusLabels[i].setOpaque(true);
             playerStatusLabels[i].setBackground(players.get(i).getColor());
             playerStatusLabels[i].setForeground(Color.WHITE);
-            playerStatusLabels[i].setFont(new Font("Segoe UI", Font.BOLD, 14));
+            playerStatusLabels[i].setFont(new Font("Segoe UI", Font.BOLD, 13));
             playerStatusLabels[i].setHorizontalAlignment(SwingConstants.CENTER);
             playerStatusLabels[i].setPreferredSize(new Dimension(0, 35));
             playerDiceLabels[i] = new JLabel("READY");
@@ -348,31 +371,49 @@ public class DijkstraBoardGame extends JFrame {
         resultArea.setBackground(Color.WHITE);
         resultArea.setForeground(new Color(44, 62, 80));
         resultArea.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        resultArea.setMargin(new Insets(10, 10, 10, 10));
+        resultArea.setMargin(new Insets(5, 5, 5, 5));
+
         JScrollPane scroll = new JScrollPane(resultArea);
-        scroll.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "SATELLITE LOG"));
+        // Hilangkan gap bawah pada border titled
+        scroll.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.GRAY), "SATELLITE LOG"));
 
         container.add(dashArea, BorderLayout.NORTH);
-        container.add(scroll, BorderLayout.CENTER);
+        container.add(scroll, BorderLayout.CENTER); // CENTER akan menarik JScrollPane hingga batas bawah
         return container;
     }
 
     private JPanel createControlPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         panel.setBackground(new Color(44, 62, 80));
+
         playModeButton = new JButton("START SHIFT");
         playModeButton.setBackground(new Color(46, 204, 113));
         playModeButton.setForeground(Color.WHITE);
         playModeButton.addActionListener(e -> startGame());
+
         rollDiceButton = new JButton("DRIVE");
         rollDiceButton.setBackground(new Color(241, 196, 15));
         rollDiceButton.addActionListener(e -> rollDice());
+
         safeModeCheck = new JCheckBox("PREMIUM GPS");
         safeModeCheck.setForeground(Color.WHITE);
         safeModeCheck.setOpaque(false);
+
+        resetMapButton = new JButton("🔄 RESET MAP");
+        resetMapButton.setBackground(new Color(52, 152, 219));
+        resetMapButton.setForeground(Color.WHITE);
+        resetMapButton.addActionListener(e -> resetMap());
+
         resetButton = new JButton("MAIN MENU");
         resetButton.addActionListener(e -> cardLayout.show(mainContainer, "LOGIN"));
-        panel.add(playModeButton); panel.add(rollDiceButton); panel.add(safeModeCheck); panel.add(resetButton);
+
+        panel.add(playModeButton);
+        panel.add(rollDiceButton);
+        panel.add(safeModeCheck);
+        panel.add(resetMapButton);
+        panel.add(resetButton);
+
         return panel;
     }
 
@@ -384,6 +425,7 @@ public class DijkstraBoardGame extends JFrame {
         GameBoard gb; List<Player> pl;
         public BoardPanel(GameBoard gb, List<Player> pl) {
             this.gb = gb; this.pl = pl;
+            // BoardPanel harus fix dimensinya
             setPreferredSize(new Dimension(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE));
         }
         @Override
@@ -403,10 +445,10 @@ public class DijkstraBoardGame extends JFrame {
                         g2.fillOval(center.x - 22 + offset, center.y - 22 + offset, 44, 44);
                     }
                     g2.setColor(p.getColor());
-                    g2.fillOval(center.x - 15 + offset, center.y - 15 + offset, 30, 30);
+                    g2.fillOval(center.x - 15 + offset, center.y - 15 + offset, 28, 28);
                     g2.setColor(Color.WHITE);
                     g2.setStroke(new BasicStroke(2));
-                    g2.drawOval(center.x - 15 + offset, center.y - 15 + offset, 30, 30);
+                    g2.drawOval(center.x - 15 + offset, center.y - 15 + offset, 28, 28);
                     g2.drawString(p.getName().substring(0, 1).toUpperCase(), center.x - 4 + offset, center.y + 5 + offset);
                 }
             }
