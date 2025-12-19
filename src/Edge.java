@@ -24,25 +24,29 @@ public class Edge {
         return weight;
     }
 
+    /**
+     * Menggambar garis penghubung antar titik (Node) di dalam sistem koordinat visual.
+     * Mengkalkulasi posisi panah agar tepat berada di tepi lingkaran node.
+     */
     public void draw(Graphics2D g2) {
-        // Calculate arrow points
+        // Kalkulasi perbedaan jarak dan sudut antar titik asal dan tujuan
         double dx = target.getX() - source.getX();
         double dy = target.getY() - source.getY();
         double angle = Math.atan2(dy, dx);
 
-        // Shorten line to stop at node boundary
+        // Menentukan titik potong garis tepat di luar radius node agar tidak tumpang tindih
         double length = Math.sqrt(dx * dx + dy * dy);
         double startX = source.getX() + (source.getRadius() * dx / length);
         double startY = source.getY() + (source.getRadius() * dy / length);
         double endX = target.getX() - (target.getRadius() * dx / length);
         double endY = target.getY() - (target.getRadius() * dy / length);
 
-        // Draw line
+        // Render garis utama penghubung rute
         g2.setColor(Color.DARK_GRAY);
         g2.setStroke(new BasicStroke(2));
         g2.draw(new Line2D.Double(startX, startY, endX, endY));
 
-        // Draw arrowhead
+        // Pengaturan geometri kepala panah untuk menunjukkan arah navigasi
         double arrowSize = 10;
         double angle1 = angle + Math.PI - Math.PI / 6;
         double angle2 = angle + Math.PI + Math.PI / 6;
@@ -60,7 +64,7 @@ public class Edge {
 
         g2.fillPolygon(xPoints, yPoints, 3);
 
-        // Draw weight if not 1
+        // Menampilkan nilai bobot (cost) di tengah rute jika nilainya signifikan
         if (weight != 1) {
             double midX = (startX + endX) / 2;
             double midY = (startY + endY) / 2;
