@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -22,8 +23,11 @@ public class DijkstraBoardGame extends JFrame {
     private static final int CELL_SIZE = 80;
 
     private JTextArea resultArea;
-    private JLabel statusLabel;
-    private JLabel diceLabel;
+
+    private JLabel[] playerStatusLabels;
+    private JLabel[] playerDiceLabels;
+    private JPanel[] playerPanels;
+
     private JButton rollDiceButton;
     private JButton playModeButton;
     private JButton findPathButton;
@@ -35,9 +39,9 @@ public class DijkstraBoardGame extends JFrame {
     private String player2Name = "Courier 2";
 
     public DijkstraBoardGame() {
-        setTitle("Code City Courier - Group 13");
+        setTitle("Code City Courier - Final Group 13");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(15, 15));
 
         soundManager = new SoundManager();
         random = new Random();
@@ -59,12 +63,12 @@ public class DijkstraBoardGame extends JFrame {
 
         add(boardPanel, BorderLayout.CENTER);
         add(createControlPanel(), BorderLayout.NORTH);
-        add(createInfoPanel(), BorderLayout.EAST);
+        add(createDualDashboardPanel(), BorderLayout.EAST);
 
         pack();
         setLocationRelativeTo(null);
         setResizable(false);
-        updateTurnLabel();
+        updateTurnDisplay();
         rollDiceButton.setEnabled(false);
     }
 
@@ -93,17 +97,22 @@ public class DijkstraBoardGame extends JFrame {
         gameBoard.generateScores(10);
         for(Player p : players) p.reset();
         boardPanel.repaint();
-        updateTurnLabel();
-        log("DISPATCH STARTED! Deliver packages!");
+        updateTurnDisplay();
+        log("SYSTEM: Dispatch started! Deliver all packages.");
     }
 
+    /**
+     * MENGEMBALIKAN ANIMASI DADU UNICODE:
+     * Menggunakan font Segoe UI Symbol agar karakter ⚀-⚅ muncul dengan transisi warna acak.
+     */
     private void rollDice() {
         if (!isGameStarted || (movementTimer != null && movementTimer.isRunning())) return;
 
         rollDiceButton.setEnabled(false);
+        JLabel activeDiceLabel = playerDiceLabels[currentPlayerIndex];
 
-        // Font Segoe UI Symbol agar simbol dadu muncul (tidak kotak putih)
-        diceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 45));
+        // Memaksa penggunaan font simbol agar dadu muncul
+        activeDiceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 45));
         String[] diceFaces = {"⚀", "⚁", "⚂", "⚃", "⚄", "⚅"};
 
         Timer rollingAnimation = new Timer(80, new ActionListener() {
@@ -111,11 +120,11 @@ public class DijkstraBoardGame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int randomIndex = random.nextInt(6);
-                diceLabel.setText(diceFaces[randomIndex]);
-                diceLabel.setForeground(new Color(random.nextInt(150), random.nextInt(150), random.nextInt(150)));
+                activeDiceLabel.setText(diceFaces[randomIndex]);
+                activeDiceLabel.setForeground(new Color(random.nextInt(150), random.nextInt(150), random.nextInt(150)));
 
                 ticks++;
-                if (ticks > 15) {
+                if (ticks > 12) {
                     ((Timer)e.getSource()).stop();
                     finalizeRoll();
                 }
@@ -131,30 +140,30 @@ public class DijkstraBoardGame extends JFrame {
         int dice = random.nextInt(6) + 1;
         boolean isGreen = random.nextInt(100) < 80;
 
-        diceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 30));
-        diceLabel.setText("🎲 " + dice + (isGreen ? " GAS" : " STALL"));
-        diceLabel.setForeground(isGreen ? new Color(34, 139, 34) : Color.RED);
+        JLabel activeDiceLabel = playerDiceLabels[currentPlayerIndex];
+        activeDiceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 28));
+        activeDiceLabel.setText("🎲 " + dice + (isGreen ? " GAS" : " STALL"));
+        activeDiceLabel.setForeground(isGreen ? new Color(34, 139, 34) : Color.RED);
 
         int currentPos = p.getPosition();
         StringBuilder logMsg = new StringBuilder(p.getName() + " moves " + dice);
 
         if (!isGreen) {
             int target = Math.max(1, currentPos - dice);
-            logMsg.append(" [ENGINE TROUBLE] -> Back to ").append(target);
+            logMsg.append(" | ENGINE STALL: Back to ").append(target);
             animateMovement(p, target, false, logMsg);
         } else {
             if (isPrime(currentPos)) {
-                logMsg.append(" [GPS CHECKPOINT] -> ");
+                logMsg.append(" | GPS ACTIVE: ");
                 dijkstra.setSafeMode(safeModeCheck.isSelected());
                 List<Integer> path = dijkstra.findShortestPath(currentPos, BOARD_SIZE * BOARD_SIZE);
-                int stepIndex = Math.min(dice, path.size() - 1);
-                int target = path.get(stepIndex);
+                int target = path.get(Math.min(dice, path.size() - 1));
                 logMsg.append("Smart Route to ").append(target);
                 animateMovement(p, target, true, logMsg);
             } else {
                 int target = currentPos + dice;
                 if (target > BOARD_SIZE * BOARD_SIZE) {
-                    logMsg.append(" -> Overshoot! Wait.");
+                    logMsg.append(" | OVERSHOOT: Waiting...");
                     log(logMsg.toString());
                     nextTurn();
                 } else {
@@ -172,10 +181,7 @@ public class DijkstraBoardGame extends JFrame {
                 handleLand(p, logMsg);
             } else {
                 if (isJump) p.setPosition(target);
-                else {
-                    if (curr < target) p.setPosition(curr+1);
-                    else p.setPosition(curr-1);
-                }
+                else p.setPosition(curr + (curr < target ? 1 : -1));
                 boardPanel.repaint();
             }
         });
@@ -183,31 +189,30 @@ public class DijkstraBoardGame extends JFrame {
     }
 
     private void handleLand(Player p, StringBuilder logMsg) {
-        int pos = p.getPosition();
-        Cell cell = gameBoard.getCellByNumber(pos);
+        Cell cell = gameBoard.getCellByNumber(p.getPosition());
 
         if (cell != null && cell.hasScore()) {
             int bonus = cell.getScore();
             p.addScore(bonus);
             soundManager.playSFX("resources/star.wav");
-            logMsg.append(" -> 📦 PICKUP (+$").append(bonus).append(")");
+            logMsg.append(" | INCOME +$").append(bonus);
             cell.setScore(0);
         }
 
         if (cell != null) {
             if (cell.isTrap()) {
                 soundManager.playSFX("resources/trap.wav");
-                logMsg.append(" -> 👮 RAID! Back to HQ");
+                logMsg.append(" | POLICE RAID: HQ return");
                 p.setPosition(1);
             }
             else if (cell.getType() == Cell.CellType.SNAKE) {
                 soundManager.playSFX("resources/snake.wav");
-                logMsg.append(" -> 🚧 TRAFFIC! Detour to ").append(cell.getTargetCell());
+                logMsg.append(" | TRAFFIC: Detour to ").append(cell.getTargetCell());
                 p.setPosition(cell.getTargetCell());
             }
             else if (cell.getType() == Cell.CellType.LADDER) {
                 soundManager.playSFX("resources/ladder.wav");
-                logMsg.append(" -> 🛣️ HIGHWAY! Fast to ").append(cell.getTargetCell());
+                logMsg.append(" | HIGHWAY: Fast to ").append(cell.getTargetCell());
                 p.setPosition(cell.getTargetCell());
             }
         }
@@ -218,52 +223,50 @@ public class DijkstraBoardGame extends JFrame {
         if (p.getPosition() == BOARD_SIZE * BOARD_SIZE) {
             soundManager.playSFX("resources/win.wav");
             leaderboard.add(new PlayerStat(p.getName(), p.getScore(), p.getTotalSteps()));
-            showLeaderboard(p);
+            showLeaderboard();
             resetGame();
         }
         else if (p.getPosition() % 5 == 0 && p.getPosition() != 1) {
-            soundManager.playSFX("resources/star.wav");
-            log("⛽ Gas Station! Free Turn.");
+            log("INFO: Gas Station - Free turn for " + p.getName());
             rollDiceButton.setEnabled(true);
-            updateTurnLabel();
+            updateTurnDisplay();
         }
         else {
             nextTurn();
         }
     }
 
-    private void showLeaderboard(Player winner) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("🎉 SHIFT COMPLETE: ").append(winner.getName()).append(" 🎉\n");
-        sb.append("Earnings: $").append(winner.getScore()).append("\n\n");
-        sb.append("=== 🏆 LEADERBOARD 🏆 ===\n");
-
-        PriorityQueue<PlayerStat> tempQueue = new PriorityQueue<>(leaderboard);
+    private void showLeaderboard() {
+        StringBuilder sb = new StringBuilder("=== TOP COURIERS ===\n");
+        PriorityQueue<PlayerStat> temp = new PriorityQueue<>(leaderboard);
         int rank = 1;
-        while (!tempQueue.isEmpty()) {
-            PlayerStat stat = tempQueue.poll();
-            sb.append("#").append(rank).append(" ").append(stat.toString()).append("\n");
-            rank++;
+        while (!temp.isEmpty()) {
+            sb.append("#").append(rank++).append(" ").append(temp.poll().toString()).append("\n");
         }
         JOptionPane.showMessageDialog(this, new JScrollPane(new JTextArea(sb.toString())), "Shift Over", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void nextTurn() {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        updateTurnLabel();
+        updateTurnDisplay();
         rollDiceButton.setEnabled(true);
     }
 
-    private void updateTurnLabel() {
-        Player p = players.get(currentPlayerIndex);
-        statusLabel.setText("CURRENT DRIVER: " + p.getName().toUpperCase());
-        statusLabel.setBackground(p.getColor());
-        statusLabel.setForeground(Color.WHITE);
+    private void updateTurnDisplay() {
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            playerStatusLabels[i].setText(p.getName().toUpperCase() + " | Earnings: $" + p.getScore());
 
-        // Menggunakan LineBorder polos agar UI bersih (tidak ada teks judul TURN yang menabrak)
-        diceLabel.setBorder(BorderFactory.createLineBorder(p.getColor(), 3));
-
-        log(">>> Shift: " + p.getName());
+            if (i == currentPlayerIndex) {
+                playerPanels[i].setBorder(BorderFactory.createLineBorder(p.getColor(), 4));
+                playerPanels[i].setBackground(Color.WHITE);
+                playerDiceLabels[i].setText("STATUS: READY");
+            } else {
+                playerPanels[i].setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+                playerPanels[i].setBackground(new Color(245, 245, 245));
+                playerDiceLabels[i].setText("STATUS: STANDBY");
+            }
+        }
     }
 
     private void resetGame() {
@@ -277,14 +280,11 @@ public class DijkstraBoardGame extends JFrame {
         rollDiceButton.setEnabled(false);
     }
 
-    private void showDemoPath() {
-        dijkstra.setSafeMode(safeModeCheck.isSelected());
-        List<Integer> path = dijkstra.findShortestPath(1, BOARD_SIZE * BOARD_SIZE);
-        log("GPS Route... " + path);
-    }
-
     private void log(String s) {
-        resultArea.append(s + "\n");
+        resultArea.append(" > " + s + "\n");
+        if (s.contains("Shift") || s.contains("started")) {
+            resultArea.append(" --------------------------\n");
+        }
         resultArea.setCaretPosition(resultArea.getDocument().getLength());
     }
 
@@ -294,65 +294,82 @@ public class DijkstraBoardGame extends JFrame {
         return true;
     }
 
-    private JPanel createControlPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        panel.setBackground(new Color(50, 50, 60));
+    private JPanel createDualDashboardPanel() {
+        JPanel container = new JPanel(new BorderLayout(10, 10));
+        container.setPreferredSize(new Dimension(320, 0));
+        container.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        container.setBackground(new Color(235, 235, 240));
 
-        playModeButton = new JButton("🚀 Start Shift");
+        JPanel dashArea = new JPanel(new GridLayout(2, 1, 10, 10));
+        dashArea.setOpaque(false);
+
+        playerPanels = new JPanel[2];
+        playerStatusLabels = new JLabel[2];
+        playerDiceLabels = new JLabel[2];
+
+        for (int i = 0; i < 2; i++) {
+            playerPanels[i] = new JPanel(new BorderLayout());
+            playerPanels[i].setBackground(Color.WHITE);
+
+            playerStatusLabels[i] = new JLabel("PLAYER " + (i+1));
+            playerStatusLabels[i].setOpaque(true);
+            playerStatusLabels[i].setBackground(players.get(i).getColor());
+            playerStatusLabels[i].setForeground(Color.WHITE);
+            playerStatusLabels[i].setFont(new Font("Segoe UI", Font.BOLD, 14));
+            playerStatusLabels[i].setHorizontalAlignment(SwingConstants.CENTER);
+            playerStatusLabels[i].setPreferredSize(new Dimension(0, 35));
+
+            playerDiceLabels[i] = new JLabel("READY");
+            playerDiceLabels[i].setHorizontalAlignment(SwingConstants.CENTER);
+            playerDiceLabels[i].setFont(new Font("Segoe UI Symbol", Font.PLAIN, 18));
+
+            playerPanels[i].add(playerStatusLabels[i], BorderLayout.NORTH);
+            playerPanels[i].add(playerDiceLabels[i], BorderLayout.CENTER);
+            dashArea.add(playerPanels[i]);
+        }
+
+        // LOG DENGAN BACKGROUND PUTIH BERSIH
+        resultArea = new JTextArea();
+        resultArea.setEditable(false);
+        resultArea.setBackground(Color.WHITE);
+        resultArea.setForeground(new Color(44, 62, 80));
+        resultArea.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        resultArea.setMargin(new Insets(10, 10, 10, 10));
+
+        JScrollPane scroll = new JScrollPane(resultArea);
+        scroll.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.GRAY), "SATELLITE LOG",
+                TitledBorder.LEFT, TitledBorder.TOP, null, Color.GRAY));
+
+        container.add(dashArea, BorderLayout.NORTH);
+        container.add(scroll, BorderLayout.CENTER);
+        return container;
+    }
+
+    private JPanel createControlPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        panel.setBackground(new Color(44, 62, 80));
+
+        playModeButton = new JButton("START SHIFT");
         playModeButton.setBackground(new Color(46, 204, 113));
         playModeButton.setForeground(Color.WHITE);
         playModeButton.addActionListener(e -> startGame());
 
-        rollDiceButton = new JButton("🎲 Drive");
+        rollDiceButton = new JButton("DRIVE");
         rollDiceButton.setBackground(new Color(241, 196, 15));
         rollDiceButton.addActionListener(e -> rollDice());
 
-        safeModeCheck = new JCheckBox("Premium GPS");
-        safeModeCheck.setBackground(new Color(50,50,60));
+        safeModeCheck = new JCheckBox("PREMIUM GPS");
         safeModeCheck.setForeground(Color.WHITE);
+        safeModeCheck.setOpaque(false);
 
-        findPathButton = new JButton("📡 GPS Test");
-        findPathButton.addActionListener(e -> showDemoPath());
-
-        resetButton = new JButton("🔄 Reset");
+        resetButton = new JButton("RESET");
         resetButton.addActionListener(e -> resetGame());
 
         panel.add(playModeButton);
         panel.add(rollDiceButton);
         panel.add(safeModeCheck);
-        panel.add(findPathButton);
         panel.add(resetButton);
-
-        return panel;
-    }
-
-    private JPanel createInfoPanel() {
-        JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.setPreferredSize(new Dimension(300, 0));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        panel.setBackground(Color.WHITE);
-
-        statusLabel = new JLabel("Waiting...");
-        statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        statusLabel.setOpaque(true);
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
-
-        diceLabel = new JLabel("⛽ Engine: OFF");
-        diceLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        diceLabel.setPreferredSize(new Dimension(280, 120)); // Sedikit lebih tinggi agar teks & dadu muat
-        diceLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-
-        resultArea = new JTextArea(15, 20);
-        resultArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(resultArea);
-
-        JPanel topInfo = new JPanel(new BorderLayout(5,5));
-        topInfo.add(statusLabel, BorderLayout.NORTH);
-        topInfo.add(diceLabel, BorderLayout.CENTER);
-
-        panel.add(topInfo, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
     }
@@ -368,8 +385,7 @@ public class DijkstraBoardGame extends JFrame {
         public BoardPanel(GameBoard gb, List<Player> pl) {
             this.gb = gb;
             this.pl = pl;
-            int size = BOARD_SIZE * CELL_SIZE;
-            setPreferredSize(new Dimension(size, size));
+            setPreferredSize(new Dimension(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE));
         }
 
         @Override
@@ -377,7 +393,6 @@ public class DijkstraBoardGame extends JFrame {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
             gb.draw(g2);
 
             for (int i = 0; i < pl.size(); i++) {
@@ -388,16 +403,19 @@ public class DijkstraBoardGame extends JFrame {
                     int offset = (i * 12) - 6;
 
                     if (i == currentPlayerIndex) {
-                        g2.setColor(new Color(p.getColor().getRed(), p.getColor().getGreen(), p.getColor().getBlue(), 100));
+                        g2.setColor(new Color(p.getColor().getRed(), p.getColor().getGreen(), p.getColor().getBlue(), 80));
                         g2.fillOval(center.x - 22 + offset, center.y - 22 + offset, 44, 44);
                     }
 
                     g2.setColor(p.getColor());
                     g2.fillOval(center.x - 15 + offset, center.y - 15 + offset, 30, 30);
                     g2.setColor(Color.WHITE);
+                    g2.setStroke(new BasicStroke(2));
                     g2.drawOval(center.x - 15 + offset, center.y - 15 + offset, 30, 30);
 
-                    g2.drawString(p.getName().substring(0, 1), center.x - 3 + offset, center.y + 4 + offset);
+                    // Gunakan inisial nama yang bersih
+                    g2.setFont(new Font("Arial", Font.BOLD, 12));
+                    g2.drawString(p.getName().substring(0, 1).toUpperCase(), center.x - 4 + offset, center.y + 5 + offset);
                 }
             }
         }
