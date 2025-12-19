@@ -7,12 +7,12 @@ public class Cell {
     private CellType type;
     private int targetCell;
 
-    // Properti Visual
+    // Status visual untuk elemen khusus di map
     private boolean isPrime;
     private boolean isStar;
-    private boolean isTrap; // Sekarang visualnya jadi "RAID"
+    private boolean isTrap;
 
-    // SCORE (Sekarang visualnya jadi PAKET)
+    // Nilai ekonomi dari paket yang bisa diambil kurir
     private int scoreValue = 0;
 
     public enum CellType {
@@ -28,7 +28,6 @@ public class Cell {
         this.targetCell = -1;
     }
 
-    // --- Setters & Getters ---
     public void setScore(int score) { this.scoreValue = score; }
     public int getScore() { return scoreValue; }
     public boolean hasScore() { return scoreValue > 0; }
@@ -54,37 +53,46 @@ public class Cell {
         return new Point(x + size / 2, y + size / 2);
     }
 
-    // --- VISUALISASI UTAMA ---
+    /**
+     * Mengatur render visual setiap kotak pada grid board.
+     * Mengubah elemen Snake/Ladder menjadi konsep navigasi kota (Detour/Highway).
+     */
     public void draw(Graphics2D g2) {
-        // 1. Warna Dasar (Jalanan Kota)
-        Color bgColor = new Color(240, 240, 240); // Abu-abu sangat muda (Trotoar/Jalan)
+        // Setup warna latar berdasarkan status kotak (Jalanan, Gudang, atau Zona Bahaya)
+        Color bgColor = new Color(240, 240, 240);
 
-        if (isTrap) bgColor = new Color(255, 100, 100); // MERAH (Zona Razia)
-        else if (type == CellType.START) bgColor = new Color(144, 238, 144); // Gudang (Start)
-        else if (type == CellType.FINISH) bgColor = new Color(135, 206, 235); // Customer (Finish - SkyBlue)
+        if (isTrap) {
+            bgColor = new Color(255, 100, 100); // Merah untuk area razia polisi
+        } else if (type == CellType.START) {
+            bgColor = new Color(144, 238, 144); // Hijau untuk titik awal (Depot)
+        } else if (type == CellType.FINISH) {
+            bgColor = new Color(135, 206, 235); // Biru untuk titik tujuan (Drop-off)
+        }
 
         g2.setColor(bgColor);
         g2.fillRect(x, y, size, size);
 
-        // 2. Border (Emas untuk Prime/Checkpoint)
+        // Highlight khusus untuk kotak prima (Checkpoint bernilai emas)
         g2.setStroke(new BasicStroke(1));
         if (isPrime) {
-            g2.setColor(new Color(255, 215, 0)); // Emas
+            g2.setColor(new Color(255, 215, 0));
             g2.setStroke(new BasicStroke(4));
             g2.drawRect(x+2, y+2, size-4, size-4);
         }
-        g2.setColor(Color.GRAY); // Border kotak jadi abu-abu (seperti blok kota)
+
+        // Garis tepi kotak agar terlihat seperti blok kota
+        g2.setColor(Color.GRAY);
         g2.setStroke(new BasicStroke(1));
         g2.drawRect(x, y, size, size);
 
-        // 3. Nomor (Alamat)
+        // Penomoran cell sebagai alamat lokasi
         g2.setColor(Color.DARK_GRAY);
         g2.setFont(new Font("Arial", Font.BOLD, 14));
         String numStr = String.valueOf(number);
         FontMetrics fm = g2.getFontMetrics();
         g2.drawString(numStr, x + size - fm.stringWidth(numStr) - 5, y + size - 5);
 
-        // 4. Ikon Star, Raid, dan PACKAGE
+        // Render ikon tambahan: Bintang (Bonus) dan Text Peringatan
         if (isStar) {
             drawStarShape(g2, x + 15, y + 15, 12);
         }
@@ -92,25 +100,23 @@ public class Cell {
         if (isTrap) {
             g2.setColor(Color.WHITE);
             g2.setFont(new Font("Arial", Font.BOLD, 10));
-            g2.drawString("RAID", x + 5, y + 28); // Text diubah jadi RAID
+            g2.drawString("RAID", x + 5, y + 28);
         }
 
-        // ✅ GAMBAR PAKET (Dulu Koin)
+        // Gambar paket barang jika kotak memiliki nilai score
         if (scoreValue > 0) {
             drawPackage(g2, x + size - 30, y + 10, scoreValue);
         }
 
-        // 5. Info Navigasi (Pengganti Ular/Tangga text)
+        // Indikator rute otomatis (Detour = Ular, HWY = Tangga)
         if (type == CellType.SNAKE || type == CellType.LADDER) {
             g2.setColor(Color.BLACK);
-            // Visual panah navigasi
             String arrow = (type == CellType.SNAKE ? "DETOUR " : "HWY ") + targetCell;
             g2.setFont(new Font("Arial", Font.BOLD, 10));
             g2.drawString(arrow, x + 5, y + size/2 + 5);
         }
     }
 
-    // Helper: Menggambar Bintang (Bonus Point)
     private void drawStarShape(Graphics2D g, int x, int y, int radius) {
         int[] xPoints = new int[10];
         int[] yPoints = new int[10];
@@ -129,27 +135,28 @@ public class Cell {
         g.drawPolygon(xPoints, yPoints, 10);
     }
 
-    // ✅ Helper Baru: Menggambar PAKET KARDUS (Pengganti Koin)
+    /**
+     * Gambar visual paket kardus untuk menggantikan konsep koin tradisional.
+     */
     private void drawPackage(Graphics2D g, int x, int y, int value) {
-        // Kotak Kardus Coklat
-        g.setColor(new Color(205, 133, 63)); // Brown
+        // Visual kardus utama
+        g.setColor(new Color(205, 133, 63));
         g.fillRect(x, y, 24, 20);
 
-        // Garis Selotip/Tali
-        g.setColor(new Color(139, 69, 19)); // Dark Brown
+        // Aksen tali pengikat paket
+        g.setColor(new Color(139, 69, 19));
         g.setStroke(new BasicStroke(2));
-        g.drawLine(x + 12, y, x + 12, y + 20); // Vertikal
-        g.drawLine(x, y + 10, x + 24, y + 10); // Horizontal
+        g.drawLine(x + 12, y, x + 12, y + 20);
+        g.drawLine(x, y + 10, x + 24, y + 10);
 
-        // Border Luar
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(1));
         g.drawRect(x, y, 24, 20);
 
-        // Nilai Paket (Duit)
+        // Label harga atau nilai paket
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 9));
         String valStr = "$" + value;
-        g.drawString(valStr, x - 2, y - 2); // Di atas paket
+        g.drawString(valStr, x - 2, y - 2);
     }
 }
