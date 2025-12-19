@@ -12,18 +12,19 @@ public class GraphPanel extends JPanel {
         setPreferredSize(new Dimension(800, 600));
         setBackground(Color.WHITE);
 
-        // Add mouse listeners for drag and drop
+        // Implementasi MouseAdapter untuk menangani interaksi drag-and-drop pada node
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (graph == null) return;
 
-                // Find if a node was clicked
+                // Cek apakah koordinat klik mouse berada di dalam radius salah satu node
                 for (Node node : graph.getNodes()) {
                     double dx = e.getX() - node.getX();
                     double dy = e.getY() - node.getY();
                     double distance = Math.sqrt(dx * dx + dy * dy);
 
+                    // Jika klik mengenai node, simpan referensi node dan hitung selisih kliknya
                     if (distance <= node.getRadius()) {
                         draggedNode = node;
                         offsetX = (int)(e.getX() - node.getX());
@@ -35,6 +36,7 @@ public class GraphPanel extends JPanel {
 
             @Override
             public void mouseDragged(MouseEvent e) {
+                // Update posisi node secara real-time saat mouse digeser
                 if (draggedNode != null) {
                     draggedNode.setPosition(e.getX() - offsetX, e.getY() - offsetY);
                     repaint();
@@ -43,6 +45,7 @@ public class GraphPanel extends JPanel {
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                // Reset referensi saat tombol mouse dilepas
                 draggedNode = null;
             }
         };
@@ -51,12 +54,15 @@ public class GraphPanel extends JPanel {
         addMouseMotionListener(mouseAdapter);
     }
 
+    /**
+     * Menangani proses rendering seluruh komponen grafis pada panel.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
 
-        // Enable anti-aliasing
+        // Optimasi rendering untuk menghaluskan tampilan tepi objek dan teks
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
@@ -65,6 +71,9 @@ public class GraphPanel extends JPanel {
         }
     }
 
+    /**
+     * Memperbarui objek graf yang akan ditampilkan dan mereset status interaksi.
+     */
     public void setGraph(Graph graph) {
         this.graph = graph;
         draggedNode = null;
