@@ -6,14 +6,17 @@ public class SoundManager {
     private Clip backgroundClip;
     private FloatControl volumeControl;
 
-    // --- MUSIC BACKGROUND (LOOPING) ---
+    /**
+     * Memutar musik latar secara terus-menerus (looping).
+     * Mengatur ambang batas volume agar suara latar tidak mendominasi efek suara game.
+     */
     public void playBackgroundMusic(String filePath) {
         try {
             if (backgroundClip != null && backgroundClip.isRunning()) return;
 
             File audioFile = new File(filePath);
             if (!audioFile.exists()) {
-                System.out.println("❌ File Music tidak ketemu: " + filePath);
+                System.out.println("❌ Audio music tidak ditemukan: " + filePath);
                 return;
             }
 
@@ -21,7 +24,7 @@ public class SoundManager {
             backgroundClip = AudioSystem.getClip();
             backgroundClip.open(audioStream);
 
-            // Set Volume Background agak kecil (misal -10 decibel) biar ga berisik
+            // Inisialisasi gain kontrol untuk menyeimbangkan intensitas suara latar
             setVolume(0.6f);
 
             backgroundClip.loop(Clip.LOOP_CONTINUOUSLY);
@@ -38,6 +41,9 @@ public class SoundManager {
         }
     }
 
+    /**
+     * Konfigurasi gain control untuk mengatur skala desibel suara.
+     */
     public void setVolume(float volume) {
         if (backgroundClip != null && backgroundClip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
             FloatControl gainControl = (FloatControl) backgroundClip.getControl(FloatControl.Type.MASTER_GAIN);
@@ -47,14 +53,16 @@ public class SoundManager {
         }
     }
 
-    // --- SOUND EFFECT (SEKALI MAIN) ---
-    // Method baru ini untuk SFX (Snake, Ladder, Win, dll)
+    /**
+     * Memutar efek suara (SFX) secara asinkron menggunakan Thread terpisah.
+     * Hal ini memastikan proses loading audio tidak menghambat (freezing) alur utama logika game.
+     */
     public void playSFX(String filePath) {
-        new Thread(() -> { // Pakai Thread biar game tidak lag saat load suara
+        new Thread(() -> {
             try {
                 File audioFile = new File(filePath);
                 if (!audioFile.exists()) {
-                    System.out.println("❌ File SFX tidak ketemu: " + filePath);
+                    System.out.println("❌ Audio SFX tidak ditemukan: " + filePath);
                     return;
                 }
 
@@ -62,7 +70,7 @@ public class SoundManager {
                 Clip clip = AudioSystem.getClip();
                 clip.open(audioStream);
 
-                // Volume SFX Full (1.0f) biar terdengar jelas di atas lagu
+                // Setel gain SFX ke level maksimal agar terdengar jelas saat kejadian penting
                 if (clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
                     FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
                     gainControl.setValue(1.0f);
@@ -70,7 +78,7 @@ public class SoundManager {
 
                 clip.start();
 
-                // Hapus memori clip setelah selesai main
+                // Listener untuk manajemen memori dengan menutup resource clip setelah durasi audio berakhir
                 clip.addLineListener(event -> {
                     if (event.getType() == LineEvent.Type.STOP) {
                         clip.close();
