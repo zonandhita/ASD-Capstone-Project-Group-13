@@ -97,16 +97,12 @@ public class DijkstraBoardGame extends JFrame {
         log("DISPATCH STARTED! Deliver packages!");
     }
 
-    /**
-     * Memperbaiki animasi dadu agar simbol muncul (tidak kotak putih)
-     * dengan memaksa penggunaan font Segoe UI Symbol.
-     */
     private void rollDice() {
         if (!isGameStarted || (movementTimer != null && movementTimer.isRunning())) return;
 
         rollDiceButton.setEnabled(false);
 
-        // Memastikan font mendukung simbol dadu Unicode
+        // Font Segoe UI Symbol agar simbol dadu muncul (tidak kotak putih)
         diceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 45));
         String[] diceFaces = {"⚀", "⚁", "⚂", "⚃", "⚄", "⚅"};
 
@@ -135,7 +131,6 @@ public class DijkstraBoardGame extends JFrame {
         int dice = random.nextInt(6) + 1;
         boolean isGreen = random.nextInt(100) < 80;
 
-        // Tampilkan hasil akhir dengan teks status GAS/STALL
         diceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 30));
         diceLabel.setText("🎲 " + dice + (isGreen ? " GAS" : " STALL"));
         diceLabel.setForeground(isGreen ? new Color(34, 139, 34) : Color.RED);
@@ -259,16 +254,13 @@ public class DijkstraBoardGame extends JFrame {
         rollDiceButton.setEnabled(true);
     }
 
-    /**
-     * Perbaikan: Menghilangkan teks "TURN" yang menabrak garis merah UI.
-     */
     private void updateTurnLabel() {
         Player p = players.get(currentPlayerIndex);
         statusLabel.setText("CURRENT DRIVER: " + p.getName().toUpperCase());
         statusLabel.setBackground(p.getColor());
         statusLabel.setForeground(Color.WHITE);
 
-        // Menggunakan LineBorder polos tanpa teks judul agar UI bersih
+        // Menggunakan LineBorder polos agar UI bersih (tidak ada teks judul TURN yang menabrak)
         diceLabel.setBorder(BorderFactory.createLineBorder(p.getColor(), 3));
 
         log(">>> Shift: " + p.getName());
@@ -348,7 +340,7 @@ public class DijkstraBoardGame extends JFrame {
 
         diceLabel = new JLabel("⛽ Engine: OFF");
         diceLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        diceLabel.setPreferredSize(new Dimension(280, 100));
+        diceLabel.setPreferredSize(new Dimension(280, 120)); // Sedikit lebih tinggi agar teks & dadu muat
         diceLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
 
         resultArea = new JTextArea(15, 20);
