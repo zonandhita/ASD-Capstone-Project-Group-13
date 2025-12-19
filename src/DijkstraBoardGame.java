@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Random;
+// Import tambahan untuk audio
+import javax.sound.sampled.*;
+import java.io.File;
 
 public class DijkstraBoardGame extends JFrame {
 
@@ -24,7 +27,6 @@ public class DijkstraBoardGame extends JFrame {
 
     private static final int BOARD_SIZE = 7;
     private static final int CELL_SIZE = 75;
-    // Total Tinggi Board = 525px
 
     private JTextArea resultArea;
     private JLabel[] playerStatusLabels = new JLabel[2];
@@ -37,11 +39,13 @@ public class DijkstraBoardGame extends JFrame {
     private String p1NameInput = "Courier A";
     private String p2NameInput = "Courier B";
 
+    // Variabel untuk mengontrol musik latar
+    private Clip backgroundClip;
+
     public DijkstraBoardGame() {
         setTitle("Code City Courier - Final Project Group 13");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Hapus semua gap pada BorderLayout utama
         setLayout(new BorderLayout(0, 0));
 
         mainContainer.add(createLoginPanel(), "LOGIN");
@@ -49,10 +53,37 @@ public class DijkstraBoardGame extends JFrame {
 
         cardLayout.show(mainContainer, "LOGIN");
 
+        // Memanggil fungsi untuk menyalakan backsound
+        playLoopingBacksound("resources/backsound1.wav");
+
         pack();
         setResizable(false);
         setLocationRelativeTo(null);
     }
+
+    /**
+     * Logika untuk memutar musik latar secara terus-menerus (looping)
+     */
+    private void playLoopingBacksound(String filePath) {
+        try {
+            File musicPath = new File(filePath);
+            if (musicPath.exists()) {
+                AudioInputStream audioInput = AudioSystem.getAudioInputStream(musicPath);
+                backgroundClip = AudioSystem.getClip();
+                backgroundClip.open(audioInput);
+
+                // Mengatur agar musik berputar terus menerus
+                backgroundClip.loop(Clip.LOOP_CONTINUOUSLY);
+                backgroundClip.start();
+            } else {
+                System.out.println("Sistem: File backsound1.wav tidak ditemukan di folder resources/");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    // --- Sisanya tetap sama dengan kode Anda sebelumnya ---
 
     private JPanel createLoginPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -84,7 +115,7 @@ public class DijkstraBoardGame extends JFrame {
         fGbc.gridy = 2; form.add(new JLabel("Courier 2 (BLUE):"), fGbc);
         fGbc.gridy = 3; form.add(p2Field, fGbc);
 
-        JButton rulesBtn = new JButton(" LIHAT KETENTUAN BERMAIN");
+        JButton rulesBtn = new JButton("LIHAT KETENTUAN BERMAIN");
         rulesBtn.setBackground(new Color(52, 152, 219));
         rulesBtn.setForeground(Color.WHITE);
         rulesBtn.addActionListener(e -> showRulesPopup());
@@ -100,7 +131,6 @@ public class DijkstraBoardGame extends JFrame {
             p2NameInput = p2Field.getText().trim();
             setupGame();
             cardLayout.show(mainContainer, "GAME");
-            // Paksa JFrame menyesuaikan ukuran board game secara presisi
             pack();
             setLocationRelativeTo(null);
         });
@@ -145,7 +175,6 @@ public class DijkstraBoardGame extends JFrame {
         players.add(new Player(p1NameInput.isEmpty() ? "Courier 1" : p1NameInput, Color.RED));
         players.add(new Player(p2NameInput.isEmpty() ? "Courier 2" : p2NameInput, Color.BLUE));
 
-        // Hilangkan gap pada gamePanel
         JPanel gamePanel = new JPanel(new BorderLayout(0, 0));
         boardPanel = new BoardPanel(gameBoard, players);
 
@@ -339,9 +368,8 @@ public class DijkstraBoardGame extends JFrame {
     }
 
     private JPanel createDualDashboardPanel() {
-        JPanel container = new JPanel(new BorderLayout(0, 0));
+        JPanel container = new JPanel(new BorderLayout());
         int totalBoardHeight = BOARD_SIZE * CELL_SIZE;
-        // Dashboard dipaksa setinggi papan permainan
         container.setPreferredSize(new Dimension(320, totalBoardHeight));
         container.setBackground(new Color(235, 235, 240));
 
@@ -374,12 +402,10 @@ public class DijkstraBoardGame extends JFrame {
         resultArea.setMargin(new Insets(5, 5, 5, 5));
 
         JScrollPane scroll = new JScrollPane(resultArea);
-        // Hilangkan gap bawah pada border titled
-        scroll.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(Color.GRAY), "SATELLITE LOG"));
+        scroll.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "SATELLITE LOG"));
 
         container.add(dashArea, BorderLayout.NORTH);
-        container.add(scroll, BorderLayout.CENTER); // CENTER akan menarik JScrollPane hingga batas bawah
+        container.add(scroll, BorderLayout.CENTER);
         return container;
     }
 
@@ -425,7 +451,6 @@ public class DijkstraBoardGame extends JFrame {
         GameBoard gb; List<Player> pl;
         public BoardPanel(GameBoard gb, List<Player> pl) {
             this.gb = gb; this.pl = pl;
-            // BoardPanel harus fix dimensinya
             setPreferredSize(new Dimension(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE));
         }
         @Override
