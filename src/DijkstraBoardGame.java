@@ -35,7 +35,7 @@ public class DijkstraBoardGame extends JFrame {
     private String player2Name = "Courier 2";
 
     public DijkstraBoardGame() {
-        setTitle("Code City Courier - Group 13"); // Judul Baru
+        setTitle("Code City Courier - Group 13");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
@@ -97,15 +97,47 @@ public class DijkstraBoardGame extends JFrame {
         log("DISPATCH STARTED! Deliver packages!");
     }
 
+    /**
+     * Memperbaiki animasi dadu agar simbol muncul (tidak kotak putih)
+     * dengan memaksa penggunaan font Segoe UI Symbol.
+     */
     private void rollDice() {
-        if (!isGameStarted) return;
+        if (!isGameStarted || (movementTimer != null && movementTimer.isRunning())) return;
+
+        rollDiceButton.setEnabled(false);
+
+        // Memastikan font mendukung simbol dadu Unicode
+        diceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 45));
+        String[] diceFaces = {"⚀", "⚁", "⚂", "⚃", "⚄", "⚅"};
+
+        Timer rollingAnimation = new Timer(80, new ActionListener() {
+            int ticks = 0;
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int randomIndex = random.nextInt(6);
+                diceLabel.setText(diceFaces[randomIndex]);
+                diceLabel.setForeground(new Color(random.nextInt(150), random.nextInt(150), random.nextInt(150)));
+
+                ticks++;
+                if (ticks > 15) {
+                    ((Timer)e.getSource()).stop();
+                    finalizeRoll();
+                }
+            }
+        });
+        rollingAnimation.start();
+    }
+
+    private void finalizeRoll() {
         Player p = players.get(currentPlayerIndex);
         p.incrementSteps();
 
         int dice = random.nextInt(6) + 1;
         boolean isGreen = random.nextInt(100) < 80;
 
-        diceLabel.setText("🎲 " + dice + (isGreen ? " (GAS)" : " (STALL)")); // Istilah Baru
+        // Tampilkan hasil akhir dengan teks status GAS/STALL
+        diceLabel.setFont(new Font("Segoe UI Symbol", Font.BOLD, 30));
+        diceLabel.setText("🎲 " + dice + (isGreen ? " GAS" : " STALL"));
         diceLabel.setForeground(isGreen ? new Color(34, 139, 34) : Color.RED);
 
         int currentPos = p.getPosition();
@@ -138,7 +170,6 @@ public class DijkstraBoardGame extends JFrame {
     }
 
     private void animateMovement(Player p, int target, boolean isJump, StringBuilder logMsg) {
-        rollDiceButton.setEnabled(false);
         movementTimer = new Timer(isJump ? 400 : 200, e -> {
             int curr = p.getPosition();
             if (curr == target) {
@@ -160,30 +191,28 @@ public class DijkstraBoardGame extends JFrame {
         int pos = p.getPosition();
         Cell cell = gameBoard.getCellByNumber(pos);
 
-        // ✅ LOGIC PAKET (Dulu Coin)
         if (cell != null && cell.hasScore()) {
             int bonus = cell.getScore();
             p.addScore(bonus);
             soundManager.playSFX("resources/star.wav");
-            logMsg.append(" -> 📦 PICKUP PACKAGE (+$").append(bonus).append(")");
+            logMsg.append(" -> 📦 PICKUP (+$").append(bonus).append(")");
             cell.setScore(0);
         }
 
-        // ✅ LOGIC JALANAN (Dulu Trap/Snake/Ladder)
         if (cell != null) {
             if (cell.isTrap()) {
                 soundManager.playSFX("resources/trap.wav");
-                logMsg.append(" -> 👮 POLICE RAID! License Suspended! (Back to HQ)");
+                logMsg.append(" -> 👮 RAID! Back to HQ");
                 p.setPosition(1);
             }
             else if (cell.getType() == Cell.CellType.SNAKE) {
                 soundManager.playSFX("resources/snake.wav");
-                logMsg.append(" -> 🚧 TRAFFIC JAM! Detour to ").append(cell.getTargetCell());
+                logMsg.append(" -> 🚧 TRAFFIC! Detour to ").append(cell.getTargetCell());
                 p.setPosition(cell.getTargetCell());
             }
             else if (cell.getType() == Cell.CellType.LADDER) {
                 soundManager.playSFX("resources/ladder.wav");
-                logMsg.append(" -> 🛣️ HIGHWAY! Speed up to ").append(cell.getTargetCell());
+                logMsg.append(" -> 🛣️ HIGHWAY! Fast to ").append(cell.getTargetCell());
                 p.setPosition(cell.getTargetCell());
             }
         }
@@ -199,7 +228,7 @@ public class DijkstraBoardGame extends JFrame {
         }
         else if (p.getPosition() % 5 == 0 && p.getPosition() != 1) {
             soundManager.playSFX("resources/star.wav");
-            log("⛽ Gas Station! Free Refill (Roll Again).");
+            log("⛽ Gas Station! Free Turn.");
             rollDiceButton.setEnabled(true);
             updateTurnLabel();
         }
@@ -210,9 +239,9 @@ public class DijkstraBoardGame extends JFrame {
 
     private void showLeaderboard(Player winner) {
         StringBuilder sb = new StringBuilder();
-        sb.append("🎉 DELIVERY COMPLETE: ").append(winner.getName()).append(" 🎉\n");
-        sb.append("Total Earnings: $").append(winner.getScore()).append("\n\n");
-        sb.append("=== 🏆 BEST COURIERS 🏆 ===\n");
+        sb.append("🎉 SHIFT COMPLETE: ").append(winner.getName()).append(" 🎉\n");
+        sb.append("Earnings: $").append(winner.getScore()).append("\n\n");
+        sb.append("=== 🏆 LEADERBOARD 🏆 ===\n");
 
         PriorityQueue<PlayerStat> tempQueue = new PriorityQueue<>(leaderboard);
         int rank = 1;
@@ -221,10 +250,7 @@ public class DijkstraBoardGame extends JFrame {
             sb.append("#").append(rank).append(" ").append(stat.toString()).append("\n");
             rank++;
         }
-
-        JTextArea textArea = new JTextArea(sb.toString());
-        textArea.setEditable(false);
-        JOptionPane.showMessageDialog(this, new JScrollPane(textArea), "Shift Over", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, new JScrollPane(new JTextArea(sb.toString())), "Shift Over", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void nextTurn() {
@@ -233,11 +259,19 @@ public class DijkstraBoardGame extends JFrame {
         rollDiceButton.setEnabled(true);
     }
 
+    /**
+     * Perbaikan: Menghilangkan teks "TURN" yang menabrak garis merah UI.
+     */
     private void updateTurnLabel() {
         Player p = players.get(currentPlayerIndex);
-        statusLabel.setText("Driver: " + p.getName() + " (Earnings: $" + p.getScore() + ")");
+        statusLabel.setText("CURRENT DRIVER: " + p.getName().toUpperCase());
         statusLabel.setBackground(p.getColor());
         statusLabel.setForeground(Color.WHITE);
+
+        // Menggunakan LineBorder polos tanpa teks judul agar UI bersih
+        diceLabel.setBorder(BorderFactory.createLineBorder(p.getColor(), 3));
+
+        log(">>> Shift: " + p.getName());
     }
 
     private void resetGame() {
@@ -249,13 +283,12 @@ public class DijkstraBoardGame extends JFrame {
         boardPanel.repaint();
         playModeButton.setEnabled(true);
         rollDiceButton.setEnabled(false);
-        log("--- SYSTEM RESET ---");
     }
 
     private void showDemoPath() {
         dijkstra.setSafeMode(safeModeCheck.isSelected());
         List<Integer> path = dijkstra.findShortestPath(1, BOARD_SIZE * BOARD_SIZE);
-        log("Calculating GPS Route... " + path);
+        log("GPS Route... " + path);
     }
 
     private void log(String s) {
@@ -273,41 +306,25 @@ public class DijkstraBoardGame extends JFrame {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         panel.setBackground(new Color(50, 50, 60));
 
-        JLabel titleLabel = new JLabel("CITY COURIER 📦");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titleLabel.setForeground(Color.WHITE);
-
         playModeButton = new JButton("🚀 Start Shift");
         playModeButton.setBackground(new Color(46, 204, 113));
         playModeButton.setForeground(Color.WHITE);
-        playModeButton.setFocusPainted(false);
         playModeButton.addActionListener(e -> startGame());
 
         rollDiceButton = new JButton("🎲 Drive");
         rollDiceButton.setBackground(new Color(241, 196, 15));
-        rollDiceButton.setForeground(Color.BLACK);
-        rollDiceButton.setFocusPainted(false);
         rollDiceButton.addActionListener(e -> rollDice());
 
         safeModeCheck = new JCheckBox("Premium GPS");
         safeModeCheck.setBackground(new Color(50,50,60));
         safeModeCheck.setForeground(Color.WHITE);
-        safeModeCheck.setToolTipText("Avoid Traffic & Police");
 
         findPathButton = new JButton("📡 GPS Test");
-        findPathButton.setBackground(new Color(52, 152, 219));
-        findPathButton.setForeground(Color.WHITE);
-        findPathButton.setFocusPainted(false);
         findPathButton.addActionListener(e -> showDemoPath());
 
         resetButton = new JButton("🔄 Reset");
-        resetButton.setBackground(new Color(231, 76, 60));
-        resetButton.setForeground(Color.WHITE);
-        resetButton.setFocusPainted(false);
         resetButton.addActionListener(e -> resetGame());
 
-        panel.add(titleLabel);
-        panel.add(Box.createHorizontalStrut(10));
         panel.add(playModeButton);
         panel.add(rollDiceButton);
         panel.add(safeModeCheck);
@@ -323,31 +340,19 @@ public class DijkstraBoardGame extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         panel.setBackground(Color.WHITE);
 
-        statusLabel = new JLabel("Waiting for Dispatch...");
+        statusLabel = new JLabel("Waiting...");
         statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
         statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
         statusLabel.setOpaque(true);
-        statusLabel.setBackground(new Color(52, 152, 219));
-        statusLabel.setForeground(Color.WHITE);
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
 
         diceLabel = new JLabel("⛽ Engine: OFF");
-        diceLabel.setFont(new Font("Arial", Font.BOLD, 16));
         diceLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        diceLabel.setPreferredSize(new Dimension(280, 100));
         diceLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        diceLabel.setPreferredSize(new Dimension(280, 50));
-
-        JPanel legendPanel = new JPanel(new GridLayout(7, 1, 5, 5));
-        legendPanel.setBorder(BorderFactory.createTitledBorder("Map Legend"));
-        legendPanel.add(createLegendItem(new Color(255, 215, 0), "GPS Point (Gold)"));
-        legendPanel.add(createLegendItem(new Color(255, 100, 100), "Police Raid (Red)"));
-        legendPanel.add(createLegendItem(new Color(205, 133, 63), "Package ($$$)"));
-        legendPanel.add(createLegendItem(Color.RED, "Courier A"));
-        legendPanel.add(createLegendItem(Color.BLUE, "Courier B"));
 
         resultArea = new JTextArea(15, 20);
         resultArea.setEditable(false);
-        resultArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         JScrollPane scrollPane = new JScrollPane(resultArea);
 
         JPanel topInfo = new JPanel(new BorderLayout(5,5));
@@ -355,21 +360,9 @@ public class DijkstraBoardGame extends JFrame {
         topInfo.add(diceLabel, BorderLayout.CENTER);
 
         panel.add(topInfo, BorderLayout.NORTH);
-        panel.add(legendPanel, BorderLayout.CENTER);
-        panel.add(scrollPane, BorderLayout.SOUTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
-    }
-
-    private JPanel createLegendItem(Color color, String text) {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        JPanel colorBox = new JPanel();
-        colorBox.setPreferredSize(new Dimension(20, 20));
-        colorBox.setBackground(color);
-        colorBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        p.add(colorBox);
-        p.add(new JLabel(text));
-        return p;
     }
 
     public static void main(String[] args) {
@@ -385,23 +378,6 @@ public class DijkstraBoardGame extends JFrame {
             this.pl = pl;
             int size = BOARD_SIZE * CELL_SIZE;
             setPreferredSize(new Dimension(size, size));
-
-            ToolTipManager.sharedInstance().setInitialDelay(100);
-            addMouseMotionListener(new MouseMotionAdapter() {
-                @Override
-                public void mouseMoved(MouseEvent e) {
-                    Cell c = gb.getCellAtPixel(e.getX(), e.getY());
-                    if (c != null) {
-                        String txt = "Loc " + c.getNumber();
-                        if (c.hasScore()) txt += " [PACKAGE +$" + c.getScore() + "]";
-                        if (c.isPrime()) txt += " [GPS SIGNAL]";
-                        if (c.isTrap()) txt += " [POLICE RAID]";
-                        if (c.getType() == Cell.CellType.SNAKE) txt += " (Traffic Jam -> "+c.getTargetCell()+")";
-                        if (c.getType() == Cell.CellType.LADDER) txt += " (Highway -> "+c.getTargetCell()+")";
-                        setToolTipText(txt);
-                    }
-                }
-            });
         }
 
         @Override
@@ -418,14 +394,18 @@ public class DijkstraBoardGame extends JFrame {
                 if (c != null) {
                     Point center = c.getCenter();
                     int offset = (i * 12) - 6;
+
+                    if (i == currentPlayerIndex) {
+                        g2.setColor(new Color(p.getColor().getRed(), p.getColor().getGreen(), p.getColor().getBlue(), 100));
+                        g2.fillOval(center.x - 22 + offset, center.y - 22 + offset, 44, 44);
+                    }
+
                     g2.setColor(p.getColor());
                     g2.fillOval(center.x - 15 + offset, center.y - 15 + offset, 30, 30);
                     g2.setColor(Color.WHITE);
                     g2.drawOval(center.x - 15 + offset, center.y - 15 + offset, 30, 30);
 
-                    String label = p.getName().substring(0, 1).toUpperCase();
-                    g2.setFont(new Font("Arial", Font.BOLD, 10));
-                    g2.drawString(label, center.x - 3 + offset, center.y + 4 + offset);
+                    g2.drawString(p.getName().substring(0, 1), center.x - 3 + offset, center.y + 4 + offset);
                 }
             }
         }
