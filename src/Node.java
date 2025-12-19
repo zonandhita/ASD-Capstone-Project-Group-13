@@ -32,23 +32,29 @@ public class Node {
         this.y = y;
     }
 
+    /**
+     * Menggambar representasi visual dari titik lokasi (Node).
+     * Setiap node ditampilkan sebagai lingkaran dengan label identitas di tengahnya.
+     */
     public void draw(Graphics2D g2) {
-        // Draw node circle
+        // Render bodi utama titik dengan warna biru cerah
         g2.setColor(new Color(100, 150, 255));
         g2.fillOval((int)(x - RADIUS), (int)(y - RADIUS), RADIUS * 2, RADIUS * 2);
 
-        // Draw border
+        // Menambahkan garis tepi agar bentuk node terlihat lebih tegas
         g2.setColor(Color.BLACK);
         g2.setStroke(new BasicStroke(2));
         g2.drawOval((int)(x - RADIUS), (int)(y - RADIUS), RADIUS * 2, RADIUS * 2);
 
-        // Draw node ID
+        // Menampilkan teks ID tepat di pusat koordinat lingkaran
         g2.setColor(Color.WHITE);
         g2.setFont(new Font("Arial", Font.BOLD, 14));
         FontMetrics fm = g2.getFontMetrics();
         String label = String.valueOf(id);
         int labelWidth = fm.stringWidth(label);
         int labelHeight = fm.getHeight();
+
+        // Kalkulasi posisi teks agar benar-benar berada di tengah (centering)
         g2.drawString(label, (int)(x - labelWidth / 2), (int)(y + labelHeight / 4));
     }
 }
