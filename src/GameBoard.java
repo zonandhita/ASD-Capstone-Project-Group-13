@@ -200,4 +200,5 @@ public class GameBoard {
 
     public int getBoardSize() { return boardSize; }
     public int getCellSize() { return cellSize; }
+
 }

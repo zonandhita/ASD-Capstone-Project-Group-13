@@ -6,10 +6,7 @@ public class SoundManager {
     private Clip backgroundClip;
     private FloatControl volumeControl;
 
-    /**
-     * Memutar musik latar secara terus-menerus (looping).
-     * Mengatur ambang batas volume agar suara latar tidak mendominasi efek suara game.
-     */
+
     public void playBackgroundMusic(String filePath) {
         try {
             if (backgroundClip != null && backgroundClip.isRunning()) return;
@@ -41,9 +38,7 @@ public class SoundManager {
         }
     }
 
-    /**
-     * Konfigurasi gain control untuk mengatur skala desibel suara.
-     */
+
     public void setVolume(float volume) {
         if (backgroundClip != null && backgroundClip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
             FloatControl gainControl = (FloatControl) backgroundClip.getControl(FloatControl.Type.MASTER_GAIN);
@@ -53,10 +48,7 @@ public class SoundManager {
         }
     }
 
-    /**
-     * Memutar efek suara (SFX) secara asinkron menggunakan Thread terpisah.
-     * Hal ini memastikan proses loading audio tidak menghambat (freezing) alur utama logika game.
-     */
+
     public void playSFX(String filePath) {
         new Thread(() -> {
             try {

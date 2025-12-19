@@ -15,9 +15,7 @@ public class BoardPanel extends JPanel {
         setBackground(new Color(240, 240, 240));
     }
 
-    /**
-     * Menangani proses rendering elemen visual papan permainan.
-     */
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -35,9 +33,7 @@ public class BoardPanel extends JPanel {
         }
     }
 
-    /**
-     * Memicu pembaruan tampilan grafis secara manual.
-     */
+
     public void updateBoard() {
         repaint();
     }

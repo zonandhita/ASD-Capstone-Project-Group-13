@@ -14,10 +14,7 @@ public class Graph {
         initializeGraph();
     }
 
-    /**
-     * Memetakan struktur matriks ketetanggaan ke dalam bentuk objek Node dan Edge.
-     * Menggunakan algoritma layout lingkaran untuk visualisasi titik koordinat.
-     */
+
     private void initializeGraph() {
         int n = adjacencyMatrix.length;
 
@@ -45,9 +42,7 @@ public class Graph {
         }
     }
 
-    /**
-     * Mengelola urutan rendering grafis agar garis rute berada di bawah lingkaran node.
-     */
+
     public void draw(Graphics2D g2) {
         // Render seluruh garis penghubung terlebih dahulu
         for (Edge edge : edges) {

@@ -24,10 +24,7 @@ public class Edge {
         return weight;
     }
 
-    /**
-     * Menggambar garis penghubung antar titik (Node) di dalam sistem koordinat visual.
-     * Mengkalkulasi posisi panah agar tepat berada di tepi lingkaran node.
-     */
+
     public void draw(Graphics2D g2) {
         // Kalkulasi perbedaan jarak dan sudut antar titik asal dan tujuan
         double dx = target.getX() - source.getX();

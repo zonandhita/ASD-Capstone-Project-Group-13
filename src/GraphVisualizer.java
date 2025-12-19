@@ -45,10 +45,7 @@ public class GraphVisualizer extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    /**
-     * Memproses teks input dari JTextArea dan mengonversinya menjadi objek Graph.
-     * Melakukan validasi untuk memastikan input berbentuk matriks persegi.
-     */
+
     private void visualizeGraph() {
         try {
             // Parsing teks mentah berdasarkan baris dan spasi

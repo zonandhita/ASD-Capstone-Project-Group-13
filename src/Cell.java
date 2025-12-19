@@ -53,10 +53,7 @@ public class Cell {
         return new Point(x + size / 2, y + size / 2);
     }
 
-    /**
-     * Mengatur render visual setiap kotak pada grid board.
-     * Mengubah elemen Snake/Ladder menjadi konsep navigasi kota (Detour/Highway).
-     */
+
     public void draw(Graphics2D g2) {
         // Setup warna latar berdasarkan status kotak (Jalanan, Gudang, atau Zona Bahaya)
         Color bgColor = new Color(240, 240, 240);
@@ -135,9 +132,7 @@ public class Cell {
         g.drawPolygon(xPoints, yPoints, 10);
     }
 
-    /**
-     * Gambar visual paket kardus untuk menggantikan konsep koin tradisional.
-     */
+
     private void drawPackage(Graphics2D g, int x, int y, int value) {
         // Visual kardus utama
         g.setColor(new Color(205, 133, 63));

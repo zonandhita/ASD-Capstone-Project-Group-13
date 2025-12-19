@@ -17,23 +17,17 @@ public class Player {
         this.totalSteps = 0;
     }
 
-    /**
-     * Menambahkan nilai pendapatan setiap kali berhasil mengambil paket.
-     */
+
     public void addScore(int amount) {
         this.score += amount;
     }
 
-    /**
-     * Mencatat setiap pergerakan kendaraan sebagai penggunaan bensin.
-     */
+
     public void incrementSteps() {
         this.totalSteps++;
     }
 
-    /**
-     * Mengembalikan status kurir ke kondisi awal (Depot) saat pergantian shift.
-     */
+
     public void reset() {
         this.position = 1;
         this.score = 0;

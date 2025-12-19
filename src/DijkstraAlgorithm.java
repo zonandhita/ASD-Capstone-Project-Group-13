@@ -14,10 +14,7 @@ public class DijkstraAlgorithm {
         this.safeMode = safe;
     }
 
-    /**
-     * Implementasi Dijkstra untuk menentukan rute pengiriman paket tercepat.
-     * Mengkalkulasi bobot berdasarkan kondisi jalan (Highway, Macet, atau Razia).
-     */
+
     public List<Integer> findShortestPath(int start, int end) {
         int max = board.getBoardSize() * board.getBoardSize();
         Map<Integer, Integer> dist = new HashMap<>();

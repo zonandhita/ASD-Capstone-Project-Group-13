@@ -61,9 +61,7 @@ public class DijkstraBoardGame extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    /**
-     * Logika untuk memutar musik latar secara terus-menerus (looping)
-     */
+
     private void playLoopingBacksound(String filePath) {
         try {
             File musicPath = new File(filePath);

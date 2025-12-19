@@ -54,9 +54,7 @@ public class GraphPanel extends JPanel {
         addMouseMotionListener(mouseAdapter);
     }
 
-    /**
-     * Menangani proses rendering seluruh komponen grafis pada panel.
-     */
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -71,9 +69,7 @@ public class GraphPanel extends JPanel {
         }
     }
 
-    /**
-     * Memperbarui objek graf yang akan ditampilkan dan mereset status interaksi.
-     */
+
     public void setGraph(Graph graph) {
         this.graph = graph;
         draggedNode = null;

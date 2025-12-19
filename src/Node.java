@@ -32,10 +32,7 @@ public class Node {
         this.y = y;
     }
 
-    /**
-     * Menggambar representasi visual dari titik lokasi (Node).
-     * Setiap node ditampilkan sebagai lingkaran dengan label identitas di tengahnya.
-     */
+
     public void draw(Graphics2D g2) {
         // Render bodi utama titik dengan warna biru cerah
         g2.setColor(new Color(100, 150, 255));
