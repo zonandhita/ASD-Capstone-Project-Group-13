@@ -83,7 +83,7 @@ public class DijkstraBoardGame extends JFrame {
         }
     }
 
-    // --- Sisanya tetap sama dengan kode Anda sebelumnya ---
+
 
     private JPanel createLoginPanel() {
         JPanel panel = new JPanel(new BorderLayout());
