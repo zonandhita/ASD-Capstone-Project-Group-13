@@ -5,8 +5,9 @@ public class Player {
     private int position;
     private Color color;
 
-    private int score;      // Uang / Pendapatan
-    private int totalSteps; // Bensin / Langkah
+    // Statistik performa kurir selama pengiriman
+    private int score;      // Total pendapatan dari paket yang diantar
+    private int totalSteps; // Akumulasi penggunaan bahan bakar (langkah)
 
     public Player(String name, Color color) {
         this.name = name;
@@ -16,23 +17,29 @@ public class Player {
         this.totalSteps = 0;
     }
 
-    // --- LOGIC METHODS ---
+    /**
+     * Menambahkan nilai pendapatan setiap kali berhasil mengambil paket.
+     */
     public void addScore(int amount) {
         this.score += amount;
     }
 
+    /**
+     * Mencatat setiap pergerakan kendaraan sebagai penggunaan bensin.
+     */
     public void incrementSteps() {
         this.totalSteps++;
     }
 
-    // ✅ Reset Data saat Game Baru
+    /**
+     * Mengembalikan status kurir ke kondisi awal (Depot) saat pergantian shift.
+     */
     public void reset() {
         this.position = 1;
         this.score = 0;
         this.totalSteps = 0;
     }
 
-    // --- GETTERS & SETTERS ---
     public int getScore() { return score; }
     public int getTotalSteps() { return totalSteps; }
     public String getName() { return name; }
