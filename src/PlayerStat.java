@@ -25,4 +25,5 @@ public class PlayerStat implements Comparable<PlayerStat> {
     public String toString() {
         return String.format("%-12s | Earnings: $% -4d | Fuel Used: %d L", name, score, totalSteps);
     }
+    // test commit
 }
